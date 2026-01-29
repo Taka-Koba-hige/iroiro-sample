@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>余白 Yohaku | 古道具と珈琲</title>
+    <style>
+        /* ベース設定 */
+        :root {
+            --bg-color: #f7f6f2;
+            --text-color: #333;
+            --accent-color: #8c8279;
+            --line-color: #dcdbd5; /* 線の色 */
+            --font-serif: "Yu Mincho", "YuMincho", "Hiragino Mincho ProN", serif;
+            --font-sans: "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-serif);
+            line-height: 2.2;
+            margin: 0;
+            padding: 0;
+            letter-spacing: 0.08em;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 40px;
+        }
+
+        /* ヘッダー周り */
+        header {
+            padding: 80px 0 120px;
+            text-align: center;
+        }
+
+        /* ロゴアニメーション */
+        .logo-container {
+            width: 100%;
+            height: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        svg.logo-text-svg {
+            width: 200px;
+            height: 80px;
+        }
+
+        text.logo-text {
+            font-family: var(--font-serif);
+            font-size: 48px;
+            font-weight: normal;
+            letter-spacing: 0.2em;
+            fill: transparent;
+            stroke: #333;
+            stroke-width: 0.8px;
+            stroke-dasharray: 300;
+            stroke-dashoffset: 300;
+            animation: textDraw 3.5s ease-out forwards, textFill 1.5s ease-out 3s forwards;
+        }
+
+        @keyframes textDraw { 0% { stroke-dashoffset: 300; } 100% { stroke-dashoffset: 0; } }
+        @keyframes textFill { 0% { fill: transparent; stroke: #333; } 100% { fill: #333; stroke: transparent; } }
+        
+        nav ul {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            font-family: var(--font-sans);
+            font-size: 0.8rem;
+            color: var(--accent-color);
+            opacity: 0;
+            animation: fadeIn 2s ease-out 4s forwards;
+        }
+
+        @keyframes fadeIn { to { opacity: 1; } }
+
+        /* メインビジュアル */
+        .hero {
+            height: 60vh;
+            background-color: #e5e3dd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 120px;
+            position: relative;
+        }
+        .hero::after {
+            content: "Image: 琵琶湖の朝霧と古材のテーブル";
+            color: #999;
+            font-size: 0.8rem;
+        }
+
+        /* コンテンツエリア */
+        section { margin-bottom: 160px; }
+
+        /* --- ここから線の変更箇所 --- */
+        h2 {
+            font-size: 1.1rem;
+            font-weight: normal;
+            /* border-bottom: 1px solid #dcdbd5; ←元々の線を消す */
+            padding-bottom: 20px;
+            margin-bottom: 40px;
+            display: inline-block;
+            position: relative; /* 線を配置する基準 */
+        }
+
+        /* h2の下線をアニメーションで作る */
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0; /* 最初は長さ0 */
+            height: 1px;
+            background-color: var(--line-color);
+            transition: width 1.8s ease-out; /* 1.8秒かけて伸びる */
+        }
+
+        /* JavaScriptでこのクラスがつくと線が伸びる */
+        h2.is-active::after {
+            width: 100%;
+        }
+
+        /* フッターの線も同様に処理 */
+        footer {
+            text-align: center;
+            padding: 80px 0;
+            /* border-top: 1px solid #e5e3dd; ←元々の線を消す */
+            font-size: 0.75rem;
+            font-family: var(--font-sans);
+            color: var(--accent-color);
+            position: relative;
+        }
+
+        footer::before {
+            content: '';
+            position: absolute;
+            top: 0; /* フッターは上部に線 */
+            left: 0;
+            width: 0;
+            height: 1px;
+            background-color: #e5e3dd; /* 以前の色と同じ */
+            transition: width 2s ease-out; /* フッターは幅が広いので少しゆっくり */
+        }
+
+        footer.is-active::before {
+            width: 100%;
+        }
+        /* --- 変更箇所ここまで --- */
+
+        p { margin-bottom: 30px; font-size: 0.95rem; }
+
+        .split { display: flex; gap: 60px; align-items: flex-start; }
+        .split-content { flex: 1; }
+        .split-img {
+            flex: 1; height: 300px; background-color: #ebe9e4;
+            display: flex; align-items: center; justify-content: center;
+            color: #aaa; font-size: 0.8rem;
+        }
+
+        dl.menu-list { display: flex; flex-wrap: wrap; margin: 0; }
+        dl.menu-list div {
+            width: 100%; display: flex; justify-content: space-between;
+            margin-bottom: 15px; border-bottom: 1px dotted #dcdbd5; padding-bottom: 5px;
+        }
+        dt { margin: 0; }
+        dd { margin: 0; font-family: var(--font-sans); font-size: 0.9rem; }
+
+
+        @media (max-width: 600px) {
+            .split { flex-direction: column; gap: 30px; }
+            .hero { height: 40vh; }
+            header { padding: 60px 0 80px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            <div class="logo-container">
+                <svg class="logo-text-svg" viewBox="0 0 200 60">
+                    <text x="50%" y="50%" class="logo-text" dominant-baseline="central" text-anchor="middle">
+                        余白
+                    </text>
+                </svg>
+            </div>
+            <span style="font-size: 0.8rem; color:#8c8279; letter-spacing: 0.1em; display:block; opacity:0; animation: fadeIn 2s ease-out 3.5s forwards;">
+                YOHAKU
+            </span>
+            <nav>
+                <ul>
+                    <li>About</li>
+                    <li>Items</li>
+                    <li>Menu</li>
+                    <li>Access</li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="hero">
+        </div>
+
+    <main class="container">
+        <section id="about">
+            <div class="split">
+                <div class="split-content">
+                    <h2 class="scroll-trigger">概念</h2>
+                    <p>ものの声に耳を澄ます。<br>滋賀・大津。琵琶湖のほとりに、<br>ほんの少しの「余白」をご用意しました。</p>
+                </div>
+                <div class="split-img">Image: 読書灯と珈琲</div>
+            </div>
+        </section>
+        
+        <section id="items">
+            <h2 class="scroll-trigger">古道具</h2>
+            <p>生活に馴染む、主張しすぎないものだけを集めています。</p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 40px;">
+                <div style="background:#ebe9e4; height:200px;"></div>
+                <div style="background:#ebe9e4; height:200px;"></div>
+                <div style="background:#ebe9e4; height:200px;"></div>
+            </div>
+        </section>
+
+        <section id="menu">
+             <div class="split">
+                <div class="split-img" style="order: 2;">Image: ハンドドリップ</div>
+                <div class="split-content" style="order: 1;">
+                    <h2 class="scroll-trigger">喫茶</h2>
+                    <p>深煎りのブレンドと、季節の焼き菓子。</p>
+                    <dl class="menu-list">
+                        <div><dt>余白ブレンド</dt><dd>650</dd></div>
+                        <div><dt>チーズケーキ</dt><dd>550</dd></div>
+                    </dl>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="scroll-trigger">
+        <div class="container">
+            <p>&copy; 2026 YOHAKU. Otsu, Shiga.</p>
+        </div>
+    </footer>
+
+    <script>
+        // 監視対象：.scroll-trigger というクラスがついている要素（h2やfooter）
+        const targets = document.querySelectorAll('.scroll-trigger');
+
+        // オプション設定
+        const options = {
+            root: null, // ビューポート全体
+            rootMargin: '0px',
+            threshold: 0.2 // 要素が下から20%見えたら発火
+        };
+
+        // 監視実行
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    // 画面に入ったら 'is-active' クラスを付与
+                    entry.target.classList.add('is-active');
+                    // 一度発火したら監視をやめる（何度もしつこく線を引き直さないため）
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, options);
+
+        // 各要素を監視リストに登録
+        targets.forEach(target => {
+            observer.observe(target);
+        });
+    </script>
+
+</body>
+</html>
