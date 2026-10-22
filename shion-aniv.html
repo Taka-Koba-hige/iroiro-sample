@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="ja" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>紫苑 SHION — 50th Anniversary Special Site | 二胡奏者・京都</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Shippori+Mincho:wght@400;500;600;700&family=Zen+Kaku+Gothic+New:wght@300;400;500&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Zen Kaku Gothic New"', 'sans-serif'],
+                        serif: ['"Shippori Mincho"', 'serif'],
+                        en: ['"Cormorant Garamond"', 'serif'],
+                    },
+                    colors: {
+                        canvas: '#fcfbfa',     // 明るく温かみのある白（和紙・絹の質感）
+                        surface: '#f4f1ea',    // わずかに色づく生成り色
+                        plum: '#5a4663',       // 落ち着いた紫苑色（文字やアクセント）
+                        gold: '#b89768',       // アンティークゴールド
+                        charcoal: '#2c272f',   // 引き締めのダークカラー
+                        vermilion: '#b83b2b',  // 落款（ハンコ）の朱色
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #fcfbfa;
+            color: #2c272f;
+            font-feature-settings: "palt";
+        }
+
+        /* 縦書き用クラス */
+        .writing-vertical {
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+            letter-spacing: 0.25em;
+        }
+
+        /* 明るいトーンに合わせたオリエンタル飾り枠 */
+        .oriental-frame {
+            position: relative;
+            border: 1px solid rgba(184, 151, 104, 0.4);
+            background-color: #ffffff;
+        }
+        .oriental-frame::before,
+        .oriental-frame::after {
+            content: "";
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border: 1px solid #b89768;
+            pointer-events: none;
+        }
+        .oriental-frame::before {
+            top: 4px;
+            left: 4px;
+            border-right: none;
+            border-bottom: none;
+        }
+        .oriental-frame::after {
+            bottom: 4px;
+            right: 4px;
+            border-left: none;
+            border-top: none;
+        }
+
+        /* 中国伝統の落款（ハンコ）風スタイル */
+        .hanko-stamp {
+            border: 2px solid #b83b2b;
+            color: #b83b2b;
+            border-radius: 4px;
+            box-shadow: inset 0 0 0 1px rgba(184, 59, 43, 0.2);
+            background-color: #fff9f8;
+        }
+
+        /* 繊細な和風・オリエンタル格子パターン背景 */
+        .bg-light-pattern {
+            background-image: radial-gradient(rgba(184, 151, 104, 0.12) 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-plum selection:text-white overflow-x-hidden bg-light-pattern">
+
+    <!-- ヘッダーナビゲーション -->
+    <header class="fixed top-0 left-0 w-full z-50 bg-canvas/90 backdrop-blur-md border-b border-gold/20 shadow-sm">
+        <div class="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
+            <a href="#" class="flex items-center gap-3 group">
+                <div class="w-9 h-9 rounded-full border border-gold/60 flex items-center justify-center bg-surface text-plum text-xs font-serif group-hover:border-plum transition-colors">
+                    紫
+                </div>
+                <div>
+                    <span class="font-serif text-lg tracking-widest text-charcoal block leading-none">紫 苑</span>
+                    <span class="font-en text-[11px] tracking-[0.25em] text-gold block mt-0.5">SHION 50th ANNIVERSARY</span>
+                </div>
+            </a>
+
+            <nav class="hidden md:flex items-center space-x-10 text-xs font-serif tracking-widest text-charcoal/80">
+                <a href="#message" class="hover:text-plum transition-colors">ご挨拶</a>
+                <a href="#album" class="hover:text-plum transition-colors">記念音源・歩み</a>
+                <a href="#concert" class="hover:text-plum transition-colors">五十祭・祝宴公演</a>
+                <a href="#favorites" class="hover:text-plum transition-colors">愛するもの（熊猫と美酒）</a>
+            </nav>
+
+            <a href="#concert" class="px-5 py-2 border border-plum/40 text-plum font-serif text-xs tracking-widest hover:bg-plum hover:text-white transition-all duration-300">
+                祝宴ご予約
+            </a>
+        </div>
+    </header>
+
+    <!-- ヒーローセクション：明るい陽光と二胡の調べ -->
+    <section class="relative min-h-screen flex items-center pt-20 overflow-hidden">
+        <!-- 柔らかなゴールドと紫苑色の光彩 -->
+        <div class="absolute top-1/4 right-1/4 w-96 h-96 bg-gold/10 rounded-full blur-[100px] pointer-events-none"></div>
+        <div class="absolute bottom-10 left-1/4 w-80 h-80 bg-plum/10 rounded-full blur-[100px] pointer-events-none"></div>
+
+        <div class="max-w-6xl mx-auto px-6 w-full py-16 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center relative z-10">
+            
+            <!-- 左：メインビジュアル（アーチ窓フレーム） -->
+            <div class="lg:col-span-5 order-2 lg:order-1">
+                <div class="relative mx-auto max-w-sm">
+                    <div class="absolute -inset-3 border border-gold/40 rounded-t-full translate-x-2 translate-y-2 pointer-events-none"></div>
+                    
+                    <div class="aspect-[3/4] rounded-t-full overflow-hidden border border-gold bg-surface relative shadow-xl group">
+                        <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=900&q=80" alt="Erhu Artist Shion" class="w-full h-full object-cover contrast-105 group-hover:scale-105 transition-transform duration-1000">
+                        <div class="absolute inset-0 bg-gradient-to-t from-charcoal/40 via-transparent to-transparent"></div>
+                        
+                        <!-- 写真内の落款（パンダ印） -->
+                        <div class="absolute bottom-6 right-6 hanko-stamp px-2 py-1 text-[10px] font-serif leading-tight text-center rotate-[-4deg] shadow-sm">
+                            <span class="block">紫苑</span>
+                            <span class="block">五十</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右：タイポグラフィ＆ステートメント -->
+            <div class="lg:col-span-7 order-1 lg:order-2 flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
+                
+                <div class="space-y-6 max-w-xl">
+                    <div class="inline-flex items-center gap-3 px-3.5 py-1 border border-gold/40 bg-surface text-plum font-en text-xs tracking-[0.2em]">
+                        <span>KYOTO ERHU PLAYER</span>
+                        <span>•</span>
+                        <span>HALF-CENTURY MILESTONE</span>
+                    </div>
+
+                    <div class="space-y-3">
+                        <p class="font-en italic text-gold text-xl sm:text-2xl tracking-wider">
+                            50th Anniversary Special Project
+                        </p>
+                        <h1 class="font-serif text-3xl sm:text-5xl font-medium tracking-wider leading-[1.35] text-charcoal">
+                            二本の弦に、五十年の<br>
+                            <span class="text-plum">月日と美酒</span>を溶かして。
+                        </h1>
+                    </div>
+
+                    <p class="text-charcoal/80 font-sans font-light text-sm sm:text-base leading-relaxed">
+                        古都・京都の光と影に寄り添いながら、二胡という楽器と共に歩んできた半世紀。<br>
+                        50歳という節目を記念し、これまで出会ってくださった皆様と、愛する音楽、オリエンタルな美意識、そして美味しいお酒への感謝を込めた特別なページを開設いたしました。
+                    </p>
+
+                    <div class="pt-4 flex flex-wrap items-center gap-5 font-serif text-xs tracking-widest">
+                        <a href="#concert" class="px-8 py-4 bg-plum text-white font-semibold hover:bg-charcoal transition-all duration-300 shadow-sm">
+                            記念公演・祝宴のご案内
+                        </a>
+                        <a href="#album" class="px-7 py-4 border border-plum/30 text-charcoal hover:border-plum transition-all duration-300">
+                            50周年記念アルバム詳細
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 縦書きの詩的な添え字 -->
+                <div class="hidden xl:block writing-vertical font-serif text-sm text-plum/70 h-72 border-r border-gold/30 pr-4 select-none">
+                    陽光あふれる京の都に響く胡弓の調べ、芳醇なる時を重ねて。
+                </div>
+
+            </div>
+
+        </div>
+    </section>
+
+    <!-- 01. ご挨拶 -->
+    <section id="message" class="py-28 bg-surface border-y border-gold/20 relative">
+        <div class="max-w-4xl mx-auto px-6">
+            <div class="oriental-frame p-8 sm:p-16 space-y-8 shadow-sm">
+                
+                <div class="text-center space-y-2">
+                    <span class="font-en text-xs tracking-[0.3em] text-gold uppercase">01 / Greeting</span>
+                    <h2 class="font-serif text-2xl sm:text-3xl tracking-widest text-charcoal">五十路の坂を、心地よい酔いとともに。</h2>
+                </div>
+
+                <div class="space-y-6 font-serif text-sm sm:text-base leading-loose text-charcoal/85">
+                    <p>
+                        気がつけば、人生の半世紀という大きな節目を迎えることとなりました。<br>
+                        若い頃はただがむしゃらに音を追い求めていた二胡の音色も、京都の穏やかな空気や、たくさんの素晴らしい出会いを経て、少しずつ角が取れ、熟成されたお酒のように丸みを帯びてきたように感じます。
+                    </p>
+                    <p>
+                        二胡という楽器は、人間の声に最も近いと言われます。<br>
+                        喜びも、穏やかな日々の温もりも、そして大好きなパンダを眺めている時のゆるやかな幸福感も、すべてがそのまま音に乗ってしまう正直な相棒です。
+                    </p>
+                    <p>
+                        50歳からの日々は、さらに肩の力を抜いて。<br>
+                        心地よい音楽と、異国情緒あふれる美しいもの、そして大切な方々と酌み交わす一献を慈しみながら、深みのある音を紡いでまいりたいと思っております。
+                    </p>
+                </div>
+
+                <div class="pt-6 border-t border-gold/30 flex justify-between items-center">
+                    <div class="text-xs font-sans text-charcoal/60">
+                        2026年 吉日 ／ 京都のアトリエにて
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span class="font-serif text-lg tracking-widest text-plum">二胡奏者 紫 苑</span>
+                        <span class="hanko-stamp px-1.5 py-0.5 text-[10px] font-serif" title="熊猫愛飲家之印">
+                            🐼酒音
+                        </span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- 02. 記念音源・歩み -->
+    <section id="album" class="py-28 max-w-6xl mx-auto px-6">
+        <div class="text-center mb-16 space-y-2">
+            <span class="font-en text-xs tracking-[0.3em] text-gold uppercase">02 / Anniversary Release</span>
+            <h2 class="font-serif text-3xl sm:text-4xl tracking-widest">五十周年記念アルバム『紫宵 - SHISHO -』</h2>
+            <p class="text-xs font-sans text-charcoal/60 pt-1">京都の情景とオリエンタルな旋律が交差する、珠玉のセルフプロデュース作品集</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            <!-- ジャケットイメージ -->
+            <div class="lg:col-span-5">
+                <div class="aspect-square oriental-frame p-4 bg-white relative group shadow-sm">
+                    <img src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80" alt="Album Cover" class="w-full h-full object-cover contrast-105 group-hover:scale-105 transition-transform duration-700">
+                    <div class="absolute inset-4 bg-gradient-to-tr from-charcoal/70 via-transparent to-plum/20 flex flex-col justify-between p-6 text-white">
+                        <div class="font-en text-xs tracking-[0.25em] text-gold">SHION 50TH RECORDINGS</div>
+                        <div>
+                            <h3 class="font-serif text-3xl tracking-widest mb-1">紫 宵</h3>
+                            <p class="font-en text-xs text-gold/90">Moonlight, Bamboo & Amber Liquor</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 収録曲リスト -->
+            <div class="lg:col-span-7 space-y-8">
+                <p class="font-sans text-sm text-charcoal/80 leading-relaxed">
+                    古典の名曲から、京都の穏やかな昼下がりをイメージしたオリジナル曲、そしてグラスを傾けながら聴いていただきたいジャジーでメロウなアレンジまで。50歳の「今」の呼吸をそのまま閉じ込めた全8曲を収録いたしました。
+                </p>
+
+                <div class="space-y-3 font-serif text-sm border-t border-gold/30 pt-4">
+                    <div class="flex justify-between items-center py-2.5 border-b border-charcoal/10 hover:text-plum transition-colors">
+                        <span>壱. 陽光のプレリュード <span class="text-xs text-charcoal/50 ml-2">- Original -</span></span>
+                        <span class="font-en text-xs text-gold">04:12</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2.5 border-b border-charcoal/10 hover:text-plum transition-colors">
+                        <span>弐. 蘇州夜曲 <span class="text-xs text-charcoal/50 ml-2">- Oriental Salon Ver. -</span></span>
+                        <span class="font-en text-xs text-gold">05:04</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2.5 border-b border-charcoal/10 hover:text-plum transition-colors">
+                        <span>参. 竹林に遊ぶ白黒の影（熊猫組曲） <span class="text-xs text-charcoal/50 ml-2">- Original -</span></span>
+                        <span class="font-en text-xs text-gold">03:48</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2.5 border-b border-charcoal/10 hover:text-plum transition-colors">
+                        <span>肆. 琥珀色のグラスと二胡のためのワルツ <span class="text-xs text-charcoal/50 ml-2">- Original -</span></span>
+                        <span class="font-en text-xs text-gold">04:55</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2.5 border-b border-charcoal/10 hover:text-plum transition-colors">
+                        <span>伍. 賽馬 — 疾走する弦 <span class="text-xs text-charcoal/50 ml-2">- Live Take in Kyoto -</span></span>
+                        <span class="font-en text-xs text-gold">03:20</span>
+                    </div>
+                </div>
+
+                <div class="pt-2 flex flex-wrap gap-4 text-xs font-serif">
+                    <span class="px-4 py-2 bg-surface border border-gold/40 text-plum font-medium">CD / デジタル配信 同時リリース</span>
+                    <span class="px-4 py-2 bg-surface border border-gold/40 text-charcoal/80">特製パンダ栞（しおり）封入</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 03. 愛するもの（オリエンタル・パンダ・お酒） -->
+    <section id="favorites" class="py-28 bg-surface border-y border-gold/20">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="text-center mb-16 space-y-2">
+                <span class="font-en text-xs tracking-[0.3em] text-vermilion uppercase font-semibold">03 / Shion's Favorites</span>
+                <h2 class="font-serif text-3xl sm:text-4xl tracking-widest text-charcoal">紫苑を形づくる、三つの偏愛。</h2>
+                <p class="text-xs font-sans text-charcoal/60 pt-1">音楽のインスピレーション源となっている、日々の愛おしいものたち</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                
+                <!-- 1. オリエンタル -->
+                <div class="border border-gold/30 bg-white p-8 space-y-4 shadow-sm relative">
+                    <div class="flex justify-between items-center border-b border-charcoal/10 pb-3">
+                        <span class="font-en text-xs tracking-widest text-vermilion font-bold">ORIENTALISM</span>
+                        <span class="font-serif text-xs text-charcoal/50">異国情緒と古都</span>
+                    </div>
+                    <h3 class="font-serif text-xl font-bold text-charcoal">シノワズリと京都の調和</h3>
+                    <p class="text-xs font-sans text-charcoal/75 leading-relaxed">
+                        中国の古い飾り格子や茶器、チャイナシルクの美しい刺繍。そうしたオリエンタルな意匠が、京都の町家や石畳の風景と不思議と調和する瞬間が好きです。演奏時の衣装や小物も、旅先で出会ったお気に入りを大切に愛用しています。
+                    </p>
+                </div>
+
+                <!-- 2. パンダ -->
+                <div class="border border-gold/30 bg-white p-8 space-y-4 shadow-sm relative">
+                    <div class="flex justify-between items-center border-b border-charcoal/10 pb-3">
+                        <span class="font-en text-xs tracking-widest text-vermilion font-bold">GIANT PANDA</span>
+                        <span class="font-serif text-xs text-charcoal/50">癒やしと象徴</span>
+                    </div>
+                    <h3 class="font-serif text-xl font-bold text-charcoal">熊猫（パンダ）という哲学</h3>
+                    <p class="text-xs font-sans text-charcoal/75 leading-relaxed">
+                        白と黒のミニマルな配色、笹を食む時のマイペースで泰然自若とした佇まい。パンダを見ていると「そんなに急がなくても大丈夫」と教えられている気がします。二胡ケースを開けると、いつもお守りのパンダがこちらを見守っています。
+                    </p>
+                </div>
+
+                <!-- 3. お酒 -->
+                <div class="border border-gold/30 bg-white p-8 space-y-4 shadow-sm relative">
+                    <div class="flex justify-between items-center border-b border-charcoal/10 pb-3">
+                        <span class="font-en text-xs tracking-widest text-vermilion font-bold">FINE LIQUOR</span>
+                        <span class="font-serif text-xs text-charcoal/50">宵の楽しみ</span>
+                    </div>
+                    <h3 class="font-serif text-xl font-bold text-charcoal">演奏後の美酒に酔う時間</h3>
+                    <p class="text-xs font-sans text-charcoal/75 leading-relaxed">
+                        練習や本番を終えた後の晩酌は、私にとって大切な一日の句読点です。京都の地酒や、年数を重ねた紹興酒、芳醇なワインまで。美味しいお酒と肴、そして気の置けない仲間との語らいが、また次の音を生み出す豊かなエネルギーになります。
+                    </p>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- 04. 五十祭・祝宴公演 -->
+    <section id="concert" class="py-28 max-w-5xl mx-auto px-6">
+        <div class="oriental-frame bg-white p-8 sm:p-14 space-y-10 shadow-sm">
+            
+            <div class="text-center space-y-3 border-b border-gold/30 pb-8">
+                <span class="px-3 py-1 bg-surface border border-gold/40 text-plum font-en text-xs tracking-[0.25em]">
+                    50th ANNIVERSARY LIVE & BANQUET
+                </span>
+                <h2 class="font-serif text-2xl sm:text-4xl tracking-widest text-charcoal pt-2">
+                    紫苑 生誕五十周年記念演奏会<br>
+                    <span class="text-plum text-xl sm:text-2xl mt-2 block">〜 弦と美酒の宵・京都特別公演 〜</span>
+                </h2>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+                <div class="md:col-span-7 space-y-4 font-sans text-sm text-charcoal/85 leading-relaxed">
+                    <p>
+                        50歳の節目を記念し、京都の歴史ある洋館サロンにて特別演奏会を開催いたします。<br>
+                        当日は一部を「純粋な二胡の響きをじっくり味わうコンサート」、二部を「紫苑セレクトの日本酒・紹興酒・ワインを片手に音楽と歓談を楽しむ祝宴サロン」としてお届けいたします。
+                    </p>
+                    <p class="text-xs text-plum font-medium">
+                        ※ご来場者様全員に、記念品「オリジナル熊猫（パンダ）デザインのお猪口」を贈呈いたします。ぜひご一緒に乾杯いたしましょう。
+                    </p>
+                </div>
+
+                <div class="md:col-span-5 bg-surface border border-gold/40 p-6 font-serif text-xs space-y-3 shadow-inner">
+                    <div class="flex justify-between py-1.5 border-b border-charcoal/10">
+                        <span class="text-plum font-bold">開催日時</span>
+                        <span>2026年11月21日（土）17:30開場</span>
+                    </div>
+                    <div class="flex justify-between py-1.5 border-b border-charcoal/10">
+                        <span class="text-plum font-bold">会場</span>
+                        <span>京都・東山 クラシックサロン（詳細はご予約時）</span>
+                    </div>
+                    <div class="flex justify-between py-1.5 border-b border-charcoal/10">
+                        <span class="text-plum font-bold">会費</span>
+                        <span>¥8,000（1ドリンク＆記念お猪口付）</span>
+                    </div>
+                    <div class="flex justify-between py-1.5">
+                        <span class="text-plum font-bold">定員</span>
+                        <span>限定 40名様（完全予約制）</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center pt-4">
+                <a href="mailto:info@shion-erhu-kyoto.jp" class="inline-block px-12 py-4 bg-plum text-white font-serif text-sm font-bold tracking-widest hover:bg-charcoal transition-all duration-300 shadow-md">
+                    お席のご予約・お問い合わせはこちら
+                </a>
+                <p class="text-[11px] font-sans text-charcoal/50 mt-4">
+                    ※お祝いのお花等のお心遣いに代えまして、当日会場にて皆様と一献酌み交わせますことを何よりの喜びと存じます。
+                </p>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- フッター -->
+    <footer class="py-12 border-t border-gold/30 bg-surface text-center space-y-4">
+        <div class="font-serif text-base tracking-[0.3em] text-plum">紫 苑 — SHION</div>
+        <p class="text-xs font-sans text-charcoal/60">Kyoto Erhu Musician / 50th Anniversary Special Website</p>
+        <div class="pt-2 text-[11px] font-en text-charcoal/40 tracking-widest">
+            &copy; 2026 SHION OFFICE KYOTO. ALL RIGHTS RESERVED.
+        </div>
+    </footer>
+
+</body>
+</html>
