@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PORTFOLIO | Web Direction, Design & AI Prototyping in Kyoto</title>
+
+  <!-- Favicon: ミニマルなグリッドと3本の弦（あるいは3コード）をモチーフにしたSVG -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231C1E21'/%3E%3Cline x1='16' y1='22' x2='48' y2='22' stroke='%23F4F3EF' stroke-width='3' stroke-linecap='round'/%3E%3Cline x1='16' y1='32' x2='40' y2='32' stroke='%239A7B56' stroke-width='3' stroke-linecap='round'/%3E%3Cline x1='16' y1='42' x2='32' y2='42' stroke='%23F4F3EF' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Cormorant+Garamond:ital,wght@0,500;1,400&family=Shippori+Mincho:wght@400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  
+  <style>
+    /* ==========================================
+       Theme Variables (Day: 洗いざらしの白とインディゴ / Night: アトリエの黒と真鍮)
+       ========================================== */
+    :root,
+    [data-mode="day"] {
+      --bg-base: #F5F4F0;       /* 白Tシャツや画用紙のようなクリーンな生成り */
+      --bg-sub: #EAE8E1;        /* 996のグレーや京都の石畳を思わせるウォームグレー */
+      --bg-card: #FAF9F6;
+      --text-main: #1A1C1E;     /* G-SHOCKのマットブラック */
+      --text-muted: #4A525D;    /* カイハラデニムのフェードインディゴ */
+      --accent: #2B4C7E;        /* 深いインディゴブルー */
+      --accent-sub: #9A7B56;    /* レスポールや古道具のブラス（真鍮）ゴールド */
+      --border: #D5D2C8;
+      --img-filter: grayscale(12%) contrast(96%) brightness(98%);
+    }
+
+    [data-mode="night"] {
+      --bg-base: #161719;       /* ThinkPadやDW-6900BBのソリッドなマットブラック */
+      --bg-sub: #1F2124;        /* 夜のアスファルト・アトリエの暗がり */
+      --bg-card: #1B1D20;
+      --text-main: #E8E6E1;     /* 柔らかなオフホワイト */
+      --text-muted: #8E96A0;    /* スチールグレー */
+      --accent: #7A9EC2;        /* 夜に映えるシャンブレーブルー */
+      --accent-sub: #B5956B;    /* 真空管やハンダのような温かいブラス */
+      --border: #2E3238;
+      --img-filter: grayscale(20%) contrast(104%) brightness(85%);
+    }
+
+    :root {
+      --font-serif: 'Shippori Mincho', serif;
+      --font-sans: 'BIZ UDPGothic', sans-serif;
+      --font-mono: 'Share Tech Mono', monospace;
+      --font-en: 'Cormorant Garamond', serif;
+      --ease-out-slow: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      font-size: 16px;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      line-height: 1.9;
+      letter-spacing: 0.05em;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      transition: background-color 0.6s var(--ease-out-slow), color 0.6s var(--ease-out-slow);
+    }
+
+    img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      filter: var(--img-filter);
+      transition: filter 0.6s ease, transform 0.8s var(--ease-out-slow);
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+      transition: opacity 0.3s ease;
+    }
+
+    a:hover {
+      opacity: 0.65;
+    }
+
+    ul {
+      list-style: none;
+    }
+
+    /* ==========================================
+       "yohaku" Split Text & Scroll Animations
+       ========================================== */
+    .split-text {
+      display: inline-block;
+      overflow: hidden;
+      vertical-align: bottom;
+    }
+
+    .split-text .char {
+      display: inline-block;
+      opacity: 0;
+      transform: translateY(1.2em);
+      transition: 
+        opacity 1.2s var(--ease-out-slow),
+        transform 1.2s var(--ease-out-slow),
+        margin-right 1.6s var(--ease-out-slow);
+      transition-delay: calc(var(--char-index) * 0.045s);
+      margin-right: -0.02em;
+    }
+
+    .split-text.is-visible .char {
+      opacity: 1;
+      transform: translateY(0);
+      margin-right: 0.12em;
+    }
+
+    .split-text.is-visible .char:last-child {
+      margin-right: 0;
+    }
+
+    .fade-up {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 1.2s var(--ease-out-slow), transform 1.2s var(--ease-out-slow);
+    }
+
+    .fade-up.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ==========================================
+       Layout Structure (Sidebar + Main Grid)
+       ========================================== */
+    .layout {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      min-height: 100vh;
+    }
+
+    /* 左サイドバー：G-SHOCKやThinkPadのような機能的な計器盤 */
+    .sidebar {
+      border-right: 1px solid var(--border);
+      padding: 40px 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      background-color: var(--bg-base);
+      transition: background-color 0.6s ease, border-color 0.6s ease;
+      z-index: 50;
+    }
+
+    .brand-mark {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--accent-sub);
+      letter-spacing: 0.15em;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .brand-name {
+      font-family: var(--font-serif);
+      font-size: 1.35rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      line-height: 1.3;
+    }
+
+    .brand-role {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 8px;
+      line-height: 1.5;
+    }
+
+    .nav-list {
+      margin: 40px 0;
+    }
+
+    .nav-item {
+      margin-bottom: 16px;
+    }
+
+    .nav-link {
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      letter-spacing: 0.08em;
+    }
+
+    .nav-link::before {
+      content: '';
+      width: 6px;
+      height: 1px;
+      background-color: var(--border);
+      transition: width 0.3s var(--ease-out-slow), background-color 0.3s ease;
+    }
+
+    .nav-link:hover::before {
+      width: 20px;
+      background-color: var(--accent);
+    }
+
+    /* サイドバー下部のモード切替＆スペック表記 */
+    .sidebar-footer {
+      border-top: 1px solid var(--border);
+      padding-top: 20px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .mode-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-sub);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      padding: 6px 12px;
+      cursor: pointer;
+      margin-bottom: 16px;
+      width: 100%;
+      justify-content: space-between;
+      transition: all 0.3s ease;
+    }
+
+    .mode-toggle:hover {
+      border-color: var(--accent-sub);
+    }
+
+    /* ==========================================
+       Hero Section
+       ========================================== */
+    .hero {
+      min-height: 92vh;
+      border-bottom: 1px solid var(--border);
+      padding: 56px 64px 80px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    /* G-SHOCKのデジタル表示をイメージしたリアルタイム・ステータスバー */
+    .status-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .status-live {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background-color: var(--accent-sub);
+      animation: blink 2.4s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
+    }
+
+    .hero-main {
+      margin: auto 0;
+      padding: 64px 0 40px;
+      max-width: 820px;
+    }
+
+    .hero-en {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--accent-sub);
+      letter-spacing: 0.18em;
+      margin-bottom: 20px;
+      display: block;
+    }
+
+    .hero-title {
+      font-family: var(--font-serif);
+      font-size: clamp(1.75rem, 3.6vw, 2.75rem);
+      font-weight: 500;
+      line-height: 1.55;
+      margin-bottom: 32px;
+    }
+
+    .hero-lead {
+      font-size: 0.98rem;
+      color: var(--text-muted);
+      line-height: 2.1;
+      max-width: 660px;
+    }
+
+    .hero-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 24px;
+      padding-top: 32px;
+      border-top: 1px dashed var(--border);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    /* ==========================================
+       Common Section Styles
+       ========================================== */
+    .section {
+      padding: 100px 64px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      gap: 20px;
+      margin-bottom: 56px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-num {
+      font-family: var(--font-mono);
+      font-size: 0.95rem;
+      color: var(--accent-sub);
+    }
+
+    .section-title {
+      font-family: var(--font-serif);
+      font-size: 1.6rem;
+      font-weight: 500;
+    }
+
+    .section-sub {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-left: auto;
+    }
+
+    /* ==========================================
+       01 / Philosophy (Standard & DIY Punk Spirit)
+       ========================================== */
+    .philosophy-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 64px;
+      align-items: start;
+    }
+
+    .philosophy-copy {
+      font-family: var(--font-serif);
+      font-size: 1.25rem;
+      line-height: 2.1;
+      margin-bottom: 28px;
+    }
+
+    .philosophy-text {
+      font-size: 0.94rem;
+      color: var(--text-muted);
+      line-height: 2.1;
+    }
+
+    .philosophy-text p + p {
+      margin-top: 20px;
+    }
+
+    /* 愛用の定番（スタンダード）リスト */
+    .standard-box {
+      background-color: var(--bg-sub);
+      border: 1px solid var(--border);
+      padding: 32px;
+      transition: background-color 0.6s ease;
+    }
+
+    .standard-box-title {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--accent-sub);
+      letter-spacing: 0.12em;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .standard-list li {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px dashed var(--border);
+      font-size: 0.85rem;
+    }
+
+    .standard-list li:last-child {
+      border-bottom: none;
+    }
+
+    .standard-key {
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+    }
+
+    .standard-val {
+      font-weight: 700;
+    }
+
+    /* ==========================================
+       02 / Selected Works (リアルな制作アーカイブ)
+       ========================================== */
+    .works-filter {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 40px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      padding: 6px 16px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .filter-btn.is-active,
+    .filter-btn:hover {
+      background-color: var(--text-main);
+      color: var(--bg-base);
+      border-color: var(--text-main);
+    }
+
+    .works-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 40px;
+    }
+
+    .work-card {
+      border: 1px solid var(--border);
+      background-color: var(--bg-card);
+      display: flex;
+      flex-direction: column;
+      transition: border-color 0.4s ease, transform 0.4s var(--ease-out-slow), background-color 0.6s ease;
+    }
+
+    .work-card:hover {
+      border-color: var(--accent-sub);
+      transform: translateY(-4px);
+    }
+
+    .work-card.is-hidden {
+      display: none;
+    }
+
+    .work-thumb {
+      aspect-ratio: 16 / 10;
+      overflow: hidden;
+      border-bottom: 1px solid var(--border);
+      background-color: var(--bg-sub);
+      position: relative;
+    }
+
+    .work-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .work-card:hover .work-thumb img {
+      transform: scale(1.04);
+    }
+
+    .work-badge {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      padding: 3px 10px;
+      border: 1px solid var(--border);
+    }
+
+    .work-body {
+      padding: 28px;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .work-meta {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--accent-sub);
+      margin-bottom: 8px;
+    }
+
+    .work-title {
+      font-family: var(--font-serif);
+      font-size: 1.25rem;
+      font-weight: 500;
+      margin-bottom: 12px;
+    }
+
+    .work-desc {
+      font-size: 0.86rem;
+      color: var(--text-muted);
+      line-height: 1.85;
+      margin-bottom: 20px;
+      flex-grow: 1;
+    }
+
+    .work-specs {
+      padding-top: 14px;
+      border-top: 1px dashed var(--border);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* ==========================================
+       03 / Workflow & Fee (AI×ディレクションの仕組み)
+       ========================================== */
+    .workflow-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+      margin-bottom: 64px;
+    }
+
+    .workflow-step {
+      border: 1px solid var(--border);
+      padding: 32px 28px;
+      background-color: var(--bg-card);
+    }
+
+    .step-num {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--accent-sub);
+      display: block;
+      margin-bottom: 12px;
+    }
+
+    .step-title {
+      font-family: var(--font-serif);
+      font-size: 1.15rem;
+      margin-bottom: 14px;
+      font-weight: 500;
+    }
+
+    .step-desc {
+      font-size: 0.86rem;
+      color: var(--text-muted);
+      line-height: 1.85;
+    }
+
+    /* 料金レンジの目安テーブル */
+    .price-box {
+      border: 1px solid var(--border);
+      background-color: var(--bg-sub);
+      padding: 36px;
+    }
+
+    .price-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .price-title {
+      font-family: var(--font-serif);
+      font-size: 1.2rem;
+    }
+
+    .price-note {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .price-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+
+    .price-table th,
+    .price-table td {
+      padding: 16px 12px;
+      border-top: 1px solid var(--border);
+      text-align: left;
+    }
+
+    .price-table th {
+      font-family: var(--font-serif);
+      font-weight: 500;
+      width: 28%;
+    }
+
+    .price-amount {
+      font-family: var(--font-mono);
+      font-size: 1rem;
+      color: var(--accent-sub);
+      white-space: nowrap;
+      width: 22%;
+    }
+
+    /* ==========================================
+       04 / Profile (京都の暮らしとアトリエ)
+       ========================================== */
+    .profile-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 56px;
+      align-items: start;
+    }
+
+    .profile-name {
+      font-family: var(--font-serif);
+      font-size: 1.4rem;
+      margin-bottom: 6px;
+    }
+
+    .profile-en {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--accent-sub);
+      margin-bottom: 24px;
+      display: block;
+    }
+
+    .profile-bio {
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      line-height: 2;
+      margin-bottom: 32px;
+    }
+
+    .spec-table {
+      border-top: 1px solid var(--border);
+      font-size: 0.86rem;
+    }
+
+    .spec-row {
+      display: grid;
+      grid-template-columns: 110px 1fr;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .spec-label {
+      font-family: var(--font-mono);
+      color: var(--accent-sub);
+    }
+
+    .contact-card {
+      border: 1px solid var(--border);
+      padding: 40px;
+      background-color: var(--bg-card);
+      margin-top: 40px;
+      text-align: center;
+    }
+
+    .contact-btn {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 14px 36px;
+      background-color: var(--text-main);
+      color: var(--bg-base);
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      letter-spacing: 0.12em;
+      transition: opacity 0.3s ease;
+    }
+
+    .footer {
+      padding: 40px 64px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    /* ==========================================
+       Responsive
+       ========================================== */
+    @media (max-width: 960px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar {
+        position: static;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        padding: 28px 24px;
+      }
+      .nav-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin: 20px 0;
+      }
+      .nav-item { margin-bottom: 0; }
+      .hero, .section { padding: 64px 24px; }
+      .philosophy-grid,
+      .works-grid,
+      .workflow-grid,
+      .profile-grid {
+        grid-template-columns: 1fr;
+        gap: 36px;
+      }
+      .price-table tr {
+        display: flex;
+        flex-direction: column;
+        padding: 12px 0;
+      }
+      .price-table th, .price-table td {
+        border: none;
+        padding: 4px 0;
+        width: 100%;
+      }
+      .price-table tr { border-top: 1px solid var(--border); }
+      .footer { padding: 32px 24px; }
+    }
+  </style>
+</head>
+<body data-mode="day">
+
+  <div class="layout">
+    
+    <!-- Left Sidebar -->
+    <aside class="sidebar">
+      <div>
+        <span class="brand-mark">KYOTO / EST. 1982</span>
+        <h1 class="brand-name js-split">TAKAHIRO KOBAYASHI</h1>
+        <p class="brand-role">
+          WEB DIRECTOR / DESIGNER<br>
+          &amp; AI PROTOTYPER
+        </p>
+
+        <nav>
+          <ul class="nav-list">
+            <li class="nav-item"><a href="#philosophy" class="nav-link">01 / STANDARD</a></li>
+            <li class="nav-item"><a href="#works" class="nav-link">02 / ARCHIVES</a></li>
+            <li class="nav-item"><a href="#workflow" class="nav-link">03 / AI &amp; METHOD</a></li>
+            <li class="nav-item"><a href="#profile" class="nav-link">04 / PROFILE</a></li>
+          </ul>
+        </nav>
+      </div>
+
+      <div class="sidebar-footer">
+        <button id="mode-btn" class="mode-toggle" type="button">
+          <span>MODE: <strong id="mode-label">DAY (LINEN)</strong></span>
+          <span>&#9680;</span>
+        </button>
+        <p>THINKPAD / DW-6900 / NB996</p>
+        <p>LITTLE CUB 50 / DIY SPIRIT</p>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main>
+
+      <!-- Hero Section -->
+      <section class="hero">
+        <div class="status-bar">
+          <div class="status-live">
+            <span class="status-dot"></span>
+            <span id="kyoto-clock">KYOTO 00:00</span>
+          </div>
+          <div id="daily-routine">STATUS: LOADING ROUTINE...</div>
+        </div>
+
+        <div class="hero-main">
+          <span class="hero-en fade-up">LESS NOISE, MORE FUNCTION.</span>
+          <h2 class="hero-title js-split">
+            洗いざらしの定番服のように、<br>
+            毎日使えて、10年飽きないWebを。
+          </h2>
+          <p class="hero-lead fade-up">
+            京都を拠点に活動する、44歳のWebディレクター／デザイナーです。<br>
+            大切にしているのは、G-SHOCKやNew Balance 996のように「タフで、機能が完結していて、気負わず使える」こと。対話を通じてビジネスの本質をシンプルな言葉と余白に整理し、AIとのタッグによる超高速プロトタイピングで、生きたWebサイトを形にします。
+          </p>
+        </div>
+
+        <div class="hero-bottom fade-up">
+          <div>BASE: KYOTO (GROUND-FLOOR GARDEN &amp; ATELIER)</div>
+          <a href="#works" style="color: var(--accent-sub); border-bottom: 1px solid var(--accent-sub); padding-bottom: 2px;">
+            VIEW SELECTED ARCHIVES &darr;
+          </a>
+        </div>
+      </section>
+
+      <!-- 01 / Philosophy (Standard & DIY) -->
+      <section id="philosophy" class="section">
+        <div class="section-header">
+          <span class="section-num">01</span>
+          <h3 class="section-title js-split">思想と、愛用のスタンダード</h3>
+          <span class="section-sub">PHILOSOPHY &amp; GEAR</span>
+        </div>
+
+        <div class="philosophy-grid">
+          <div class="fade-up">
+            <p class="philosophy-copy">
+              3コードで本質を鳴らすパンクロックのように。<br>
+              余計な装飾を削ぎ落とすほど、言葉と写真は強くなる。
+            </p>
+            <div class="philosophy-text">
+              <p>
+                90年代〜00年代のウエストコースト・パンクから学んだ「自分の手で作り、自分の手で直す（DIY）」という精神は、ギターの配線いじりやリトルカブのオイル交換から、現在のWeb制作にまで一貫して流れています。
+              </p>
+              <p>
+                Webサイトも同じです。過剰なアニメーションや複雑な構造は、維持を難しくし、見る人の目を疲れさせます。タイポグラフィの美しい階層、呼吸するような余白（yohaku）、そして誠実な言葉。それらを標準的なHTML/CSSとモダンな設計でシンプルに組み上げることで、クライアントにとって本当に使いやすい「商売の道具」をご提供します。
+              </p>
+            </div>
+          </div>
+
+          <!-- 自分の「定番」をスペック表として見せるブロック -->
+          <div class="standard-box fade-up">
+            <div class="standard-box-title">MY TIMELESS STANDARDS // 身につける定番</div>
+            <ul class="standard-list">
+              <li>
+                <span class="standard-key">WATCH</span>
+                <span class="standard-val">CASIO G-SHOCK (DW-6900BB / MS)</span>
+              </li>
+              <li>
+                <span class="standard-key">SHOES</span>
+                <span class="standard-val">New Balance (996 / 998 / 990 / 574)</span>
+              </li>
+              <li>
+                <span class="standard-key">WARDROBE</span>
+                <span class="standard-val">Plain Crew-Neck Tee &amp; Kaihara Denim</span>
+              </li>
+              <li>
+                <span class="standard-key">MACHINE</span>
+                <span class="standard-val">Lenovo ThinkPad &amp; Generative AI</span>
+              </li>
+              <li>
+                <span class="standard-key">MOBILITY</span>
+                <span class="standard-val">Honda Little Cub (Self-Maintained)</span>
+              </li>
+              <li>
+                <span class="standard-key">GUITAR</span>
+                <span class="standard-val">Bacchus BLS-59 / Greco GO (Mod)</span>
+              </li>
+              <li>
+                <span class="standard-key">MUSIC</span>
+                <span class="standard-val">90s Skate Punk / Melodic Hardcore</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- 02 / Selected Works (これまでのリアルなプロジェクト群) -->
+      <section id="works" class="section">
+        <div class="section-header">
+          <span class="section-num">02</span>
+          <h3 class="section-title js-split">制作アーカイブ・プロトタイプ</h3>
+          <span class="section-sub">SELECTED WORKS</span>
+        </div>
+
+        <!-- カテゴリフィルター -->
+        <div class="works-filter fade-up">
+          <button class="filter-btn is-active" data-filter="all">ALL PROJECTS (6)</button>
+          <button class="filter-btn" data-filter="shop">SHOP &amp; BRAND (3)</button>
+          <button class="filter-btn" data-filter="architecture">REAL ESTATE &amp; SPACE (2)</button>
+          <button class="filter-btn" data-filter="culture">MUSIC &amp; CULTURE (1)</button>
+        </div>
+
+        <div class="works-grid">
+
+          <!-- Work 1: yohaku -->
+          <article class="work-card fade-up" data-category="shop">
+            <div class="work-thumb">
+              <span class="work-badge">TEMPLATE SYSTEM</span>
+              <img src="https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=800&q=80" alt="yohaku 古道具と日々の衣">
+            </div>
+            <div class="work-body">
+              <span class="work-meta">DIRECTION / DESIGN SYSTEM / JS ANIMATION</span>
+              <h4 class="work-title">yohaku｜古道具と、日々の衣</h4>
+              <p class="work-desc">
+                40代のロハスな暮らしを愛する層に向けた古道具・古着店のコンセプトサイト。CSS変数により「生成り・土と器・古民家夜」の3テーマをワンクリック（または閲覧時間）で切り替えられる着せ替えシステムと、1文字ずつ余白が広がるタイポグラフィ演出を実装。
+              </p>
+              <div class="work-specs">
+                <span>TARGET: LIFESTYLE / VINTAGE</span>
+                <span>HTML / CSS Variables / Vanilla JS</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Work 2: mignon -->
+          <article class="work-card fade-up" data-category="shop">
+            <div class="work-thumb">
+              <span class="work-badge">SINGLE PAGE</span>
+              <img src="https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=800&q=80" alt="mignon ハンドメイドスタンプブランド">
+            </div>
+            <div class="work-body">
+              <span class="work-meta">BRANDING / UI DESIGN / RESPONSIVE</span>
+              <h4 class="work-title">mignon｜ハンドメイドスタンプブランド</h4>
+              <p class="work-desc">
+                手彫りスタンプ作家の世界観を伝えるシングルページデザイン。インクの温度感や紙の手触りを感じさせる配色設計と、スマートフォンからでも直感的に作品の魅力とオーダー導線が伝わるミニマルなナビゲーションを構築。
+              </p>
+              <div class="work-specs">
+                <span>TARGET: CRAFT / ARTIST</span>
+                <span>Single Page LP / Custom UI</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Work 3: TAMAYA BUILDING & CRASARC -->
+          <article class="work-card fade-up" data-category="architecture">
+            <div class="work-thumb">
+              <span class="work-badge">KYOTO PROPERTY</span>
+              <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80" alt="TAMAYA BUILDING & CRASARC">
+            </div>
+            <div class="work-body">
+              <span class="work-meta">WEB PROTOTYPE / INFORMATION ARCHITECTURE</span>
+              <h4 class="work-title">TAMAYA BUILDING / CRASARC</h4>
+              <p class="work-desc">
+                京都のローカルビルディングおよび不動産物件のためのWebプロトタイプ。物件の持つ歴史や建築の空気感を損なわないよう、余計なバナーや装飾を排し、整然としたグリッドレイアウトとタイポグラフィで信頼感を表現。
+              </p>
+              <div class="work-specs">
+                <span>TARGET: REAL ESTATE / KYOTO</span>
+                <span>Grid Layout / Responsive Header</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Work 4: Otsu Vintage Tools & Cafe -->
+          <article class="work-card fade-up" data-category="architecture">
+            <div class="work-thumb">
+              <span class="work-badge">SCROLL ANIMATION</span>
+              <img src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=800&q=80" alt="大津の古道具とカフェ">
+            </div>
+            <div class="work-body">
+              <span class="work-meta">CONCEPT DESIGN / SVG LINE ANIMATION</span>
+              <h4 class="work-title">Vintage Tools &amp; Cafe（滋賀・大津）</h4>
+              <p class="work-desc">
+                琵琶湖のほとり・大津エリアを想定した、古道具とカフェの複合ショップコンセプト。スクロールに連動して繊細なSVGのラインが描かれるアニメーションを取り入れ、静かな時間の流れを視覚化。
+              </p>
+              <div class="work-specs">
+                <span>TARGET: CAFE &amp; ANTIQUES</span>
+                <span>SVG Animation / Minimal UI</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Work 5: MIMIC CANDY FACTORY -->
+          <article class="work-card fade-up" data-category="shop">
+            <div class="work-thumb">
+              <span class="work-badge">LOGO &amp; EC LAYOUT</span>
+              <img src="https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?auto=format&fit=crop&w=800&q=80" alt="MIMIC CANDY FACTORY">
+            </div>
+            <div class="work-body">
+              <span class="work-meta">ART DIRECTION / LOGO / EC PRODUCT PAGE</span>
+              <h4 class="work-title">MIMIC CANDY FACTORY</h4>
+              <p class="work-desc">
+                ハンドメイド雑貨プロジェクトのブランドロゴデザインと、ECサイトの商品一覧・詳細ページのCSSレイアウト設計。コラージュ感と遊び心を持たせつつ、購入導線は迷わせない機能的なUIに整理。
+              </p>
+              <div class="work-specs">
+                <span>TARGET: HANDMADE GOODS / EC</span>
+                <span>Logo Design / CSS Grid</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Work 6: Music & Special Campaign -->
+          <article class="work-card fade-up" data-category="culture">
+            <div class="work-thumb">
+              <span class="work-badge">CULTURE &amp; SPECIAL LP</span>
+              <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80" alt="Music & Album Release Campaign">
+            </div>
+            <div class="work-body">
+              <span class="work-meta">CREATIVE DIRECTION / JACKET ART / CAMPAIGN LP</span>
+              <h4 class="work-title">THE RIGHT BURNS / 記念アルバム特設サイト</h4>
+              <p class="work-desc">
+                80sハードコア・パンクのモノクロ美学を取り入れたバンド『THE RIGHT BURNS』のWeb・アートワーク制作から、友人の50歳を記念した二胡アルバムリリースのサプライズ特設サイトまで、音楽と人を繋ぐプロジェクト。
+              </p>
+              <div class="work-specs">
+                <span>TARGET: MUSIC / SPECIAL EVENT</span>
+                <span>Art Direction / Special LP</span>
+              </div>
+            </div>
+          </article>
+
+        </div>
+      </section>
+
+      <!-- 03 / AI & Method (戦い方と料金の透明性) -->
+      <section id="workflow" class="section">
+        <div class="section-header">
+          <span class="section-num">03</span>
+          <h3 class="section-title js-split">AI×ディレクションの制作手法と料金目安</h3>
+          <span class="section-sub">WORKFLOW &amp; FEE</span>
+        </div>
+
+        <div class="workflow-grid">
+          <div class="workflow-step fade-up">
+            <span class="step-num">STEP 01 // HUMAN DIRECTION</span>
+            <h4 class="step-title">対話と「空気感」の言語化</h4>
+            <p class="step-desc">
+              どんなお客様に届けたいか、どんな音楽や手触りが好きか。まずはじっくりお話を伺い、お店の「芯」となるコンセプトワードとペルソナを言語化します。ここは人間にしかできない最も大切な工程です。
+            </p>
+          </div>
+
+          <div class="workflow-step fade-up">
+            <span class="step-num">STEP 02 // AI PROTOTYPING</span>
+            <h4 class="step-title">動くサンプルで、その場で比較</h4>
+            <p class="step-desc">
+              静止画のデザインカンプで何週間もお待たせしません。AIを専属エンジニアとして駆使し、実際にブラウザで動くプロトタイプを素早く構築。色味や文字の動きを画面上で切り替えながら、一緒に最適解を選びます。
+            </p>
+          </div>
+
+          <div class="workflow-step fade-up">
+            <span class="step-num">STEP 03 // CRAFT &amp; DELIVERY</span>
+            <h4 class="step-title">削ぎ落とし、長く使える道具へ</h4>
+            <p class="step-desc">
+              不要な外部プラグインに頼らない、軽量で壊れにくいHTML/CSS設計で仕上げます。公開後のちょっとした文言修正や、季節ごとの営業日案内なども気兼ねなく相談できるパートナーとして伴走します。
+            </p>
+          </div>
+        </div>
+
+        <!-- 料金目安 -->
+        <div class="price-box fade-up">
+          <div class="price-header">
+            <h4 class="price-title">制作フィーの目安（税別）</h4>
+            <span class="price-note">※規模やご予算に合わせて柔軟に設計いたします</span>
+          </div>
+          <table class="price-table">
+            <tbody>
+              <tr>
+                <th>シングルページ（LP型）プラン</th>
+                <td class="price-amount">¥150,000 - ¥200,000</td>
+                <td>個人店・ブランドの名刺代わりに。コンセプト設計、1ページ完結デザイン＆実装、スマホ対応、アニメーション演出一式。</td>
+              </tr>
+              <tr>
+                <th>スタンダード・ブランディング</th>
+                <td class="price-amount">¥250,000 - ¥350,000</td>
+                <td>初回プレゼンでの「3テーマ着せ替え検証」付き。トップ＋下層2〜3ページ（商品紹介、アクセス、お問い合わせ等）、ファビコン制作。</td>
+              </tr>
+              <tr>
+                <th>CMS（更新機能）導入プラン</th>
+                <td class="price-amount">¥380,000 - ¥500,000~</td>
+                <td>入荷情報や「日々の便り」をご自身で簡単に更新できるシステム（WordPress / microCMS等）の組み込みと操作レクチャー。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 04 / Profile -->
+      <section id="profile" class="section">
+        <div class="section-header">
+          <span class="section-num">04</span>
+          <h3 class="section-title js-split">プロフィール・暮らし</h3>
+          <span class="section-sub">ABOUT ME</span>
+        </div>
+
+        <div class="profile-grid">
+          <div class="fade-up">
+            <h4 class="profile-name">Webディレクター / デザイナー</h4>
+            <span class="profile-en">BASED IN KYOTO / BORN IN 1982 (44 YO)</span>
+            <p class="profile-bio">
+              京都の専用庭のある1階マンションで、妻と3歳の娘と暮らしています（すぐ近くに作業用のアトリエ部屋も維持）。<br><br>
+              職業訓練でHTML/CSSの基礎を体系的に学び直したことを機に、これまでのディレクション経験と「生成AIによるコード構築」を掛け合わせた独自の制作スタイルを確立。<br><br>
+              休日はリトルカブで京都の街を走ったり、ギター（Bacchus BLS-59 / Greco GO）の配線をハンダごてで改造したり、家族のためにだし巻き玉子や味噌汁、自家製サラダチキンを作るのが日常です。お笑いラジオ（オードリー、ヤーレンズ、オモコロ等）や、娘と一緒に観る『Bluey』『Peppa Pig』の優れたデザインとユーモアからも日々刺激を受けています。
+            </p>
+          </div>
+
+          <div class="fade-up">
+            <div class="spec-table">
+              <div class="spec-row">
+                <span class="spec-label">ROLE</span>
+                <span>Webディレクション / UIデザイン / AIプロトタイピング</span>
+              </div>
+              <div class="spec-row">
+                <span class="spec-label">SKILLS</span>
+                <span>HTML5 / CSS3 (Design Tokens) / JavaScript / AI Co-Creation</span>
+              </div>
+              <div class="spec-row">
+                <span class="spec-label">LOCATION</span>
+                <span>京都府京都市（オンラインで全国対応・京滋エリアは対面可）</span>
+              </div>
+              <div class="spec-row">
+                <span class="spec-label">FAVORITES</span>
+                <span>NOFX, Bad Religion, Pennywise, Sublime / だし巻き玉子</span>
+              </div>
+            </div>
+
+            <div class="contact-card">
+              <p style="font-family: var(--font-serif); font-size: 1.1rem; margin-bottom: 8px;">
+                お仕事のご相談・インハウス参画のお問い合わせ
+              </p>
+              <p style="font-size: 0.85rem; color: var(--text-muted);">
+                「まだイメージが固まっていない」「まずはサンプルを見てみたい」という段階からお気軽にご連絡ください。京都近郊であれば、リトルカブでふらっとお話も伺います。
+              </p>
+              <a href="mailto:hello@example.com" class="contact-btn">SEND AN EMAIL &rarr;</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <footer class="footer">
+        <div>&copy; 2026 DESIGNED &amp; DIRECTED IN KYOTO.</div>
+        <div>BUILT WITH SIMPLE HTML, CSS VARIABLES &amp; DIY SPIRIT.</div>
+      </footer>
+
+    </main>
+  </div>
+
+  <!-- JavaScript -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+
+      // 1. 京都の現在時刻 ＆ 44歳パパディレクターのリアルな日常ルーティン表示
+      const clockEl = document.getElementById("kyoto-clock");
+      const routineEl = document.getElementById("daily-routine");
+      const modeLabel = document.getElementById("mode-label");
+      const modeBtn = document.getElementById("mode-btn");
+
+      function updateStatus(autoSwitchTheme = false) {
+        const now = new Date();
+        const h = now.getHours();
+        const m = String(now.getMinutes()).padStart(2, "0");
+        clockEl.textContent = `KYOTO ${String(h).padStart(2, "0")}:${m}`;
+
+        let routine = "";
+        let recommendedMode = "day";
+
+        if (h >= 5 && h < 8) {
+          routine = "MORNING PREP // 押し麦ご飯と味噌汁・だし巻き玉子の仕込み中";
+          recommendedMode = "day";
+        } else if (h >= 8 && h < 9) {
+          routine = "FAMILY ROUTINE // 3歳の娘と保育園へ登園中";
+          recommendedMode = "day";
+        } else if (h >= 9 && h < 12) {
+          routine = "DEEP WORK // アトリエにてThinkPadでディレクション＆AI構築中";
+          recommendedMode = "day";
+        } else if (h >= 12 && h < 13) {
+          routine = "LUNCH & RIDE // リトルカブで京都の街を移動・昼休憩";
+          recommendedMode = "day";
+        } else if (h >= 13 && h < 17) {
+          routine = "CLIENT WORK // プロトタイプ検証・デザインブラッシュアップ中";
+          recommendedMode = "day";
+        } else if (h >= 17 && h < 21) {
+          routine = "FAMILY TIME // 家族と夕食＆娘と『Bluey』鑑賞タイム";
+          recommendedMode = "night";
+        } else {
+          routine = "ATELIER NIGHT // 夜の静かなアトリエでAIプロトタイピング＆ギター整備";
+          recommendedMode = "night";
+        }
+
+        routineEl.textContent = `STATUS: ${routine}`;
+
+        if (autoSwitchTheme) {
+          setThemeMode(recommendedMode);
+        }
+      }
+
+      function setThemeMode(mode) {
+        document.body.setAttribute("data-mode", mode);
+        modeLabel.textContent = mode === "day" ? "DAY (LINEN)" : "NIGHT (ATELIER)";
+      }
+
+      // 初回読み込み時は現在時刻に合わせて自動でDay/Nightを設定
+      updateStatus(true);
+      setInterval(() => updateStatus(false), 30000);
+
+      // 手動でのモード切り替えボタン
+      modeBtn.addEventListener("click", () => {
+        const current = document.body.getAttribute("data-mode");
+        setThemeMode(current === "day" ? "night" : "day");
+      });
+
+      // 2. Works カテゴリフィルター
+      const filterBtns = document.querySelectorAll(".filter-btn");
+      const workCards = document.querySelectorAll(".work-card");
+
+      filterBtns.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const filter = btn.getAttribute("data-filter");
+          filterBtns.forEach((b) => b.classList.remove("is-active"));
+          btn.classList.add("is-active");
+
+          workCards.forEach((card) => {
+            const category = card.getAttribute("data-category");
+            if (filter === "all" || category === filter) {
+              card.classList.remove("is-hidden");
+            } else {
+              card.classList.add("is-hidden");
+            }
+          });
+        });
+      });
+
+      // 3. yohaku式 1文字ずつ浮かび上がるテキスト分割 (.js-split)
+      const splitTargets = document.querySelectorAll(".js-split");
+
+      splitTargets.forEach((target) => {
+        const nodes = Array.from(target.childNodes);
+        target.innerHTML = "";
+        target.classList.add("split-text");
+
+        let charIndex = 0;
+
+        nodes.forEach((node) => {
+          if (node.nodeType === Node.TEXT_NODE) {
+            const text = node.textContent.trim();
+            text.split("").forEach((char) => {
+              const span = document.createElement("span");
+              span.classList.add("char");
+              span.innerHTML = char === " " ? "&nbsp;" : char;
+              span.style.setProperty("--char-index", charIndex);
+              target.appendChild(span);
+              charIndex++;
+            });
+          } else if (node.nodeName === "BR") {
+            target.appendChild(document.createElement("br"));
+          }
+        });
+      });
+
+      // 4. Intersection Observer (スクロール監視)
+      const observer = new IntersectionObserver((entries, obs) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            obs.unobserve(entry.target);
+          }
+        });
+      }, { rootMargin: "0px 0px -10% 0px", threshold: 0.1 });
+
+      document.querySelectorAll(".split-text, .fade-up").forEach((el) => {
+        observer.observe(el);
+      });
+    });
+  </script>
+</body>
+</html>

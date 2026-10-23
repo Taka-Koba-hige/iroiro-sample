@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="ja" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PIXEL & LOGIC — 8bit/16bit Minimal Web Direction</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: DotGothic16 (日本語ドットフォント) & Press Start 2P (欧文8bitフォント) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Press+Start+2P&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        dot: ['"DotGothic16"', 'monospace'],
+                        arcade: ['"Press Start 2P"', 'monospace'],
+                    },
+                    colors: {
+                        nesBlack: '#0c0c0c',
+                        nesWhite: '#fcfcfc',
+                        rockCyan: '#00e8d8',
+                        rockBlue: '#0078f8',
+                        marioRed: '#e40058',
+                        coinGold: '#f8b800',
+                        pipeGreen: '#00a800',
+                        dqSky: '#4060f8',
+                        dqGrass: '#78d800',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* ドットフォントの輪郭をくっきりさせる設定 */
+        body {
+            background-color: #0c0c0c;
+            color: #fcfcfc;
+            font-family: 'DotGothic16', monospace;
+            -webkit-font-smoothing: none;
+            -moz-osx-font-smoothing: grayscale;
+            font-smooth: never;
+            image-rendering: pixelated;
+            letter-spacing: 0.08em;
+        }
+
+        h1, h2, h3, p, a, span, li, button {
+            font-weight: 400;
+        }
+
+        /* 1. ドラクエ風・コマンドウィンドウ（黒ベタ塗り＋白二重枠） */
+        .dq-window {
+            background-color: #000000;
+            border: 3px solid #fcfcfc;
+            border-radius: 4px;
+            box-shadow: 
+                inset 0 0 0 3px #000000,
+                inset 0 0 0 5px #fcfcfc,
+                0 6px 0 rgba(0, 0, 0, 0.85);
+            position: relative;
+        }
+
+        /* ウィンドウ上部の見出しラベル（「コマンド」「あれく」の枠線被せ再現） */
+        .dq-label {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #000000;
+            padding: 0 8px;
+            color: #fcfcfc;
+            line-height: 1;
+            white-space: nowrap;
+        }
+
+        /* 2. ロックマン風・ステージセレクト枠 */
+        .rock-frame {
+            background-color: #000000;
+            border: 4px solid #00e8d8;
+            box-shadow: 
+                inset 0 0 0 3px #0078f8,
+                0 4px 0 #000000;
+            transition: transform 0.1s steps(2);
+            cursor: pointer;
+        }
+        .rock-frame:hover {
+            border-color: #f8b800;
+            box-shadow: 
+                inset 0 0 0 3px #e40058,
+                0 4px 0 #000000;
+            transform: translateY(-2px);
+        }
+
+        /* 3. ファミコン風・ドットボタン */
+        .pixel-btn {
+            position: relative;
+            display: inline-block;
+            border: 3px solid #fcfcfc;
+            background-color: #e40058;
+            color: #fcfcfc;
+            box-shadow: 4px 4px 0px #000000;
+        }
+        .pixel-btn:hover {
+            background-color: #f8b800;
+            color: #0c0c0c;
+            border-color: #fcfcfc;
+        }
+        .pixel-btn:active {
+            transform: translate(4px, 4px);
+            box-shadow: 0px 0px 0px #000000;
+        }
+
+        /* ドラクエ風・選択カーソル「▶」アニメーション */
+        .command-item {
+            position: relative;
+            padding-left: 1.25rem;
+            text-align: left;
+        }
+        .command-item::before {
+            content: "▶";
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0;
+            color: #fcfcfc;
+        }
+        .command-item:hover::before,
+        .command-item.active-cmd::before {
+            opacity: 1;
+            color: #f8b800;
+            animation: blink 0.6s steps(2, start) infinite;
+        }
+
+        @keyframes blink {
+            to { visibility: hidden; }
+        }
+
+        /* ライフゲージ（HP/MPバー） */
+        .gauge-bar {
+            background-image: repeating-linear-gradient(
+                to right,
+                #f8b800,
+                #f8b800 6px,
+                #0c0c0c 6px,
+                #0c0c0c 8px
+            );
+        }
+
+        /* 16×16 SVGドット絵を拡大してもぼかさない */
+        svg.pixel-svg {
+            shape-rendering: crispEdges;
+        }
+
+        /* 背景グリッド */
+        .bg-pixel-grid {
+            background-size: 32px 32px;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+        }
+
+        /* 初代ドラクエのフィールド風タイル背景（モーダル背面用） */
+        .dq-field-bg {
+            background-color: #58c800;
+            background-image: 
+                radial-gradient(#288000 15%, transparent 16%),
+                radial-gradient(#98f840 15%, transparent 16%);
+            background-size: 16px 16px;
+            background-position: 0 0, 8px 8px;
+        }
+
+        /* エンカウント時の点滅アニメーション */
+        @keyframes encounter-flash {
+            0% { filter: invert(1); transform: scale(0.95); }
+            50% { filter: invert(0); transform: scale(1.02); }
+            100% { filter: invert(0); transform: scale(1); }
+        }
+        .animate-encounter {
+            animation: encounter-flash 0.25s steps(2) forwards;
+        }
+    </style>
+</head>
+<body class="bg-pixel-grid min-h-screen selection:bg-coinGold selection:text-nesBlack">
+
+    <!-- 上部ステータスバー -->
+    <header class="fixed top-0 left-0 w-full z-40 bg-nesBlack border-b-4 border-nesWhite px-4 py-3">
+        <div class="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-4">
+            <a href="#" class="flex items-center gap-4 group">
+                <div class="font-arcade text-[10px] sm:text-xs leading-tight">
+                    <span class="text-marioRed block">1UP CREATOR</span>
+                    <span class="text-nesWhite tracking-wider">KYOTO-044</span>
+                </div>
+                <div class="hidden sm:block font-arcade text-[10px] sm:text-xs leading-tight">
+                    <span class="text-coinGold block">WORLD</span>
+                    <span class="text-nesWhite">WEB-2026</span>
+                </div>
+            </a>
+
+            <nav class="flex items-center gap-4 sm:gap-6 text-base">
+                <a href="#about" class="command-item hover:text-coinGold">つよさ</a>
+                <a href="#works" class="command-item hover:text-coinGold">すてーじ</a>
+                <a href="#philosophy" class="command-item hover:text-coinGold">さくせん</a>
+                <a href="#contact" class="command-item text-coinGold">はなす</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- メインコンテナ -->
+    <main class="max-w-5xl mx-auto px-4 pt-28 pb-24 space-y-24">
+
+        <!-- ヒーローセクション -->
+        <section class="space-y-10">
+            <div class="dq-window p-6 sm:p-12 text-center relative overflow-hidden">
+                <div class="absolute top-4 left-4 w-2 h-2 bg-coinGold"></div>
+                <div class="absolute top-4 right-4 w-2 h-2 bg-coinGold"></div>
+                <div class="absolute bottom-4 left-4 w-2 h-2 bg-coinGold"></div>
+                <div class="absolute bottom-4 right-4 w-2 h-2 bg-coinGold"></div>
+
+                <p class="font-arcade text-[10px] sm:text-xs text-rockCyan tracking-[0.2em] mb-4">
+                    8-BIT / 16-BIT MINIMALISM & AI DIRECTION
+                </p>
+
+                <div class="flex justify-center items-center my-6">
+                    <svg class="w-14 h-14 sm:w-16 sm:h-16 pixel-svg" viewBox="0 0 16 16">
+                        <rect x="1" y="1" width="14" height="14" fill="#f8b800"/>
+                        <rect x="0" y="1" width="1" height="14" fill="#0c0c0c"/>
+                        <rect x="15" y="1" width="1" height="14" fill="#0c0c0c"/>
+                        <rect x="1" y="0" width="14" height="1" fill="#0c0c0c"/>
+                        <rect x="1" y="15" width="14" height="1" fill="#0c0c0c"/>
+                        <rect x="2" y="2" width="1" height="1" fill="#0c0c0c"/>
+                        <rect x="13" y="2" width="1" height="1" fill="#0c0c0c"/>
+                        <rect x="2" y="13" width="1" height="1" fill="#0c0c0c"/>
+                        <rect x="13" y="13" width="1" height="1" fill="#0c0c0c"/>
+                        <path d="M5 4H10V7H8V9H6V7H8V6H5V4ZM6 11H8V13H6V11Z" fill="#0c0c0c"/>
+                    </svg>
+                </div>
+
+                <h1 class="text-2xl sm:text-5xl tracking-widest leading-relaxed text-nesWhite">
+                    せいやくが あるから、<br>
+                    ほんしつが ひかる。
+                </h1>
+
+                <p class="mt-6 text-base sm:text-lg text-nesWhite/90 max-w-xl mx-auto leading-loose">
+                    256×256のドット絵が無限の物語を描いたように。<br>
+                    余計な機能を削ぎ落とし、「枯れた技術」と「最新AI」で<br>
+                    10年壊れないシンプルで強いWeb体験を設計します。
+                </p>
+
+                <div class="mt-8">
+                    <a href="#works" class="pixel-btn font-arcade text-xs sm:text-sm px-6 py-3.5">
+                        ▶ PRESS START
+                    </a>
+                </div>
+            </div>
+
+            <!-- ドラクエ風：会話メッセージウィンドウ -->
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+                <div class="md:col-span-4 dq-window p-5">
+                    <div class="border-b-2 border-nesWhite pb-2 mb-3 text-center text-coinGold tracking-widest text-base">
+                        こまんど
+                    </div>
+                    <ul class="space-y-3 text-base sm:text-lg">
+                        <li><a href="#works" class="command-item block hover:text-coinGold">つくったもの</a></li>
+                        <li><a href="#philosophy" class="command-item block hover:text-coinGold">りねん・さくせん</a></li>
+                        <li><a href="#about" class="command-item block hover:text-coinGold">つよさ・そうび</a></li>
+                        <li><a href="#contact" class="command-item block hover:text-coinGold">なかまにする</a></li>
+                    </ul>
+                </div>
+
+                <div class="md:col-span-8 dq-window p-6 space-y-3 text-base sm:text-lg leading-loose">
+                    <p class="text-coinGold">＊「よくぞ このページへ たどりついた！</p>
+                    <p>
+                        下の『STAGE SELECT』から きになる プロジェクトを クリックしてみよ。<br>
+                        初代ドラクエの バトル画面が あらわれて くわしい解説と リンク先へ とべるぞ！<span class="inline-block animate-bounce ml-2 text-coinGold">▼</span>
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 01. STAGE SELECT（クリックで初代ドラクエ戦闘ポップアップ発動！） -->
+        <section id="works" class="space-y-8">
+            <div class="text-center space-y-2">
+                <span class="font-arcade text-xs text-rockCyan tracking-widest block">01 / PORTFOLIO ARCHIVES</span>
+                <h2 class="font-arcade text-xl sm:text-3xl text-nesWhite tracking-wider">
+                    - STAGE SELECT -
+                </h2>
+                <p class="text-sm sm:text-base text-coinGold">
+                    ▼ カードをクリックすると「せんとう画面（詳細＆リンク）」がひらきます ▼
+                </p>
+            </div>
+
+            <!-- ロックマン風 3×3グリッド -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                <!-- STAGE 1: MIMIC CANDY FACTORY -->
+                <div onclick="openBattleModal('stage1')" class="rock-frame p-5 flex flex-col justify-between space-y-4">
+                    <div class="flex justify-between items-start border-b-2 border-rockBlue pb-2">
+                        <span class="font-arcade text-[10px] text-rockCyan">STAGE 01</span>
+                        <span class="font-arcade px-2 py-0.5 bg-marioRed text-nesWhite text-[9px]">CRAFT & PUNK</span>
+                    </div>
+                    <div class="space-y-3">
+                        <svg class="w-12 h-12 pixel-svg" viewBox="0 0 16 16">
+                            <rect width="16" height="16" fill="#0c0c0c"/>
+                            <path d="M9 1h4v4h-2v2h3v3h-3v2H9v3H6v-4h2V9H5V6h3V4h1V1z" fill="#f8b800"/>
+                        </svg>
+                        <h3 class="font-arcade text-xs sm:text-sm text-coinGold leading-snug">MIMIC CANDY FACTORY</h3>
+                        <p class="text-sm text-nesWhite/90 leading-relaxed">
+                            90年代パンク＆スカのDIY精神をチェッカーフラッグとコラージュ感で表現した、ハンドメイド作家のEC＆ブランドコンセプト。
+                        </p>
+                    </div>
+                    <div class="pt-2 border-t border-white/20 font-arcade text-[9px] text-coinGold flex justify-between">
+                        <span>▶ CLICK TO BATTLE</span>
+                        <span>LINK!</span>
+                    </div>
+                </div>
+
+                <!-- STAGE 2: MANDA RAMU ZINE -->
+                <div onclick="openBattleModal('stage2')" class="rock-frame p-5 flex flex-col justify-between space-y-4">
+                    <div class="flex justify-between items-start border-b-2 border-rockBlue pb-2">
+                        <span class="font-arcade text-[10px] text-rockCyan">STAGE 02</span>
+                        <span class="font-arcade px-2 py-0.5 bg-purple-600 text-nesWhite text-[9px]">SUBCULTURE</span>
+                    </div>
+                    <div class="space-y-3">
+                        <svg class="w-12 h-12 pixel-svg" viewBox="0 0 16 16">
+                            <rect width="16" height="16" fill="#0c0c0c"/>
+                            <rect x="6" y="1" width="4" height="2" fill="#fcfcfc"/>
+                            <rect x="7" y="3" width="2" height="3" fill="#fcfcfc"/>
+                            <path d="M4 6h8v2h2v6H2V8h2V6z" fill="#a855f7"/>
+                            <rect x="5" y="9" width="2" height="2" fill="#fcfcfc"/>
+                        </svg>
+                        <h3 class="font-arcade text-xs sm:text-sm text-coinGold leading-snug">MANDA RAMU ZINE</h3>
+                        <p class="text-sm text-nesWhite/90 leading-relaxed">
+                            アングラ・フェティッシュな世界観と礼儀正しいバイリンガルな人間味を、ZINE（同人誌）風のデコラティブなレイアウトに凝縮。
+                        </p>
+                    </div>
+                    <div class="pt-2 border-t border-white/20 font-arcade text-[9px] text-coinGold flex justify-between">
+                        <span>▶ CLICK TO BATTLE</span>
+                        <span>LINK!</span>
+                    </div>
+                </div>
+
+                <!-- STAGE 3: SHION 50th SPECIAL -->
+                <div onclick="openBattleModal('stage3')" class="rock-frame p-5 flex flex-col justify-between space-y-4">
+                    <div class="flex justify-between items-start border-b-2 border-rockBlue pb-2">
+                        <span class="font-arcade text-[10px] text-rockCyan">STAGE 03</span>
+                        <span class="font-arcade px-2 py-0.5 bg-amber-600 text-nesWhite text-[9px]">ANNIVERSARY</span>
+                    </div>
+                    <div class="space-y-3">
+                        <svg class="w-12 h-12 pixel-svg" viewBox="0 0 16 16">
+                            <rect width="16" height="16" fill="#0c0c0c"/>
+                            <rect x="2" y="2" width="3" height="3" fill="#00e8d8"/>
+                            <rect x="11" y="2" width="3" height="3" fill="#00e8d8"/>
+                            <rect x="3" y="4" width="10" height="9" fill="#fcfcfc"/>
+                            <rect x="4" y="6" width="3" height="2" fill="#0c0c0c"/>
+                            <rect x="9" y="6" width="3" height="2" fill="#0c0c0c"/>
+                            <rect x="7" y="9" width="2" height="1" fill="#0c0c0c"/>
+                            <rect x="6" y="11" width="4" height="1" fill="#e40058"/>
+                        </svg>
+                        <h3 class="font-arcade text-xs sm:text-sm text-coinGold leading-snug">SHION 50th SPECIAL</h3>
+                        <p class="text-sm text-nesWhite/90 leading-relaxed">
+                            京都の二胡奏者の50周年特設サイト。和紙のような明るいトーンに、シノワズリな窓枠と「パンダ＆美酒」の落款印を上品に配置。
+                        </p>
+                    </div>
+                    <div class="pt-2 border-t border-white/20 font-arcade text-[9px] text-coinGold flex justify-between">
+                        <span>▶ CLICK TO BATTLE</span>
+                        <span>LINK!</span>
+                    </div>
+                </div>
+
+                <!-- STAGE 4: HOME & FAMILY ALBUM -->
+                <div onclick="openBattleModal('stage4')" class="rock-frame p-5 flex flex-col justify-between space-y-4">
+                    <div class="flex justify-between items-start border-b-2 border-rockBlue pb-2">
+                        <span class="font-arcade text-[10px] text-rockCyan">STAGE 04</span>
+                        <span class="font-arcade px-2 py-0.5 bg-pipeGreen text-nesWhite text-[9px]">B2B2C SYSTEM</span>
+                    </div>
+                    <div class="space-y-3">
+                        <svg class="w-12 h-12 pixel-svg" viewBox="0 0 16 16">
+                            <rect width="16" height="16" fill="#0c0c0c"/>
+                            <path d="M3 4h5v5H3V4zm2 2v1h1V6H5zm3 0h7v2h-2v3h-2V8H8V6z" fill="#f8b800"/>
+                        </svg>
+                        <h3 class="font-arcade text-xs sm:text-sm text-coinGold leading-snug">HOME & FAMILY ALBUM</h3>
+                        <p class="text-sm text-nesWhite/90 leading-relaxed">
+                            不動産成約特典としての「パスワード保護付き・家族と家の成長記録CMS」。QRコードで親族に安全に配れるBaaS連携システム。
+                        </p>
+                    </div>
+                    <div class="pt-2 border-t border-white/20 font-arcade text-[9px] text-coinGold flex justify-between">
+                        <span>▶ CLICK TO BATTLE</span>
+                        <span>LINK!</span>
+                    </div>
+                </div>
+
+                <!-- CENTER BOSS: クリエイター自身 -->
+                <div onclick="openBattleModal('boss')" class="dq-window p-5 flex flex-col items-center justify-center text-center space-y-3 cursor-pointer hover:border-coinGold transition-colors">
+                    <span class="font-arcade text-[10px] text-coinGold">DIRECTOR'S CORE</span>
+                    <svg class="w-14 h-14 pixel-svg" viewBox="0 0 16 16">
+                        <rect width="16" height="16" fill="#0c0c0c"/>
+                        <rect x="1" y="4" width="14" height="8" fill="#e40058"/>
+                        <rect x="2" y="5" width="12" height="6" fill="#f8b800"/>
+                        <path d="M4 6h1v1h1v1H5v1H4V8H3V7h1V6z" fill="#0c0c0c"/>
+                        <rect x="10" y="7" width="1" height="2" fill="#e40058"/>
+                        <rect x="12" y="7" width="1" height="2" fill="#e40058"/>
+                    </svg>
+                    <h3 class="font-arcade text-xs text-nesWhite">WILY / CREATOR</h3>
+                    <p class="text-sm text-nesWhite/80">
+                        「かれたぎじゅつの すいへいしこう」で<br>あらゆる個性をドットのように翻訳する
+                    </p>
+                    <span class="font-arcade text-[9px] text-marioRed">▶ CLICK STATUS</span>
+                </div>
+
+                <!-- STAGE 5: VINTAGE & STAMP UI -->
+                <div onclick="openBattleModal('stage5')" class="rock-frame p-5 flex flex-col justify-between space-y-4">
+                    <div class="flex justify-between items-start border-b-2 border-rockBlue pb-2">
+                        <span class="font-arcade text-[10px] text-rockCyan">STAGE 05</span>
+                        <span class="font-arcade px-2 py-0.5 bg-sky-600 text-nesWhite text-[9px]">LOCAL SHOP</span>
+                    </div>
+                    <div class="space-y-3">
+                        <svg class="w-12 h-12 pixel-svg" viewBox="0 0 16 16">
+                            <rect width="16" height="16" fill="#0c0c0c"/>
+                            <rect x="5" y="2" width="1" height="2" fill="#00e8d8"/>
+                            <rect x="8" y="1" width="1" height="3" fill="#00e8d8"/>
+                            <path d="M3 6h8v6H3V6zm8 1h2v3h-2V7zM2 13h10v1H2v-1z" fill="#fcfcfc"/>
+                        </svg>
+                        <h3 class="font-arcade text-xs sm:text-sm text-coinGold leading-snug">VINTAGE & STAMP UI</h3>
+                        <p class="text-sm text-nesWhite/90 leading-relaxed">
+                            古道具カフェや消しゴムはんこ作家など、手仕事の温度感を伝えるためのシングルページ設計と心地よい余白のデザイン。
+                        </p>
+                    </div>
+                    <div class="pt-2 border-t border-white/20 font-arcade text-[9px] text-coinGold flex justify-between">
+                        <span>▶ CLICK TO BATTLE</span>
+                        <span>LINK!</span>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- 02. PHILOSOPHY -->
+        <section id="philosophy" class="space-y-8">
+            <div class="text-center space-y-2">
+                <span class="font-arcade text-xs text-coinGold tracking-widest block">02 / STRATEGY & PHILOSOPHY</span>
+                <h2 class="text-2xl sm:text-3xl tracking-widest text-nesWhite">
+                    「かれたぎじゅつの すいへいしこう」3つのさくせん
+                </h2>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="dq-window p-6 space-y-4">
+                    <div class="flex items-center justify-between border-b-2 border-nesWhite/40 pb-2">
+                        <span class="font-arcade text-xs text-coinGold">TACTICS 01</span>
+                        <span class="text-sm bg-nesWhite text-nesBlack px-2 py-0.5">ぴくとぐらむ</span>
+                    </div>
+                    <h3 class="text-xl text-coinGold">ひきざんで「らしさ」をのこす</h3>
+                    <p class="text-sm sm:text-base text-nesWhite/90 leading-relaxed">
+                        天野喜孝や鳥山明のイラストを16×16のドットに落とし込んだ当時の職人たちのように。複雑な情報から一番おいしいエッセンスだけを抽出し、一目で伝わるデザインに翻訳します。
+                    </p>
+                </div>
+
+                <div class="dq-window p-6 space-y-4">
+                    <div class="flex items-center justify-between border-b-2 border-nesWhite/40 pb-2">
+                        <span class="font-arcade text-xs text-rockCyan">TACTICS 02</span>
+                        <span class="text-sm bg-nesWhite text-nesBlack px-2 py-0.5">しんぷる・けんろう</span>
+                    </div>
+                    <h3 class="text-xl text-rockCyan">10ねん こわれない ぎじゅつ</h3>
+                    <p class="text-sm sm:text-base text-nesWhite/90 leading-relaxed">
+                        流行り廃りの激しい重厚なフレームワークは使いません。成熟したHTML/CSSと、信頼性の高い外部BaaS（Supabase等）をパズルのように組み合わせ、維持費ほぼゼロで長持ちする仕組みを作ります。
+                    </p>
+                </div>
+
+                <div class="dq-window p-6 space-y-4">
+                    <div class="flex items-center justify-between border-b-2 border-nesWhite/40 pb-2">
+                        <span class="font-arcade text-xs text-marioRed">TACTICS 03</span>
+                        <span class="text-sm bg-nesWhite text-nesBlack px-2 py-0.5">AI こうそくしさく</span>
+                    </div>
+                    <h3 class="text-xl text-marioRed">ことばよりさきに「しさくひん」を</h3>
+                    <p class="text-sm sm:text-base text-nesWhite/90 leading-relaxed">
+                        分厚い企画書で営業するのではなく、最新AIとのペアプログラミングによって、数時間で「実際に触れるモックアップ」を目の前に提示します。画面を見ながら一緒にワクワクする制作スタイルです。
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 03. STATUS & EQUIPMENT -->
+        <section id="about" class="dq-window p-6 sm:p-10">
+            <div class="border-b-2 border-nesWhite/40 pb-4 mb-8 flex flex-wrap justify-between items-center gap-4">
+                <div>
+                    <span class="font-arcade text-xs text-coinGold block">03 / CHARACTER STATUS</span>
+                    <h2 class="text-xl sm:text-2xl tracking-widest mt-2 text-nesWhite">つよさ・そうび いちらん</h2>
+                </div>
+                <div class="font-arcade text-xs bg-nesBlack px-4 py-2 border-2 border-nesWhite text-coinGold">
+                    LV. 44 / JOB: WEB DIRECTOR
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+                <div class="md:col-span-6 space-y-5 bg-nesBlack p-6 border-2 border-nesWhite">
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="font-arcade text-[10px] text-rockCyan">MINIMAL DESIGN <span class="font-dot text-xs text-nesWhite">(ひきざん)</span></span>
+                            <span class="font-arcade text-[10px]">99 / 99</span>
+                        </div>
+                        <div class="w-full h-4 bg-nesBlack border border-nesWhite p-0.5">
+                            <div class="h-full w-full gauge-bar"></div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="font-arcade text-[10px] text-coinGold">AI SPEED CODING <span class="font-dot text-xs text-nesWhite">(すぴーど)</span></span>
+                            <span class="font-arcade text-[10px]">95 / 99</span>
+                        </div>
+                        <div class="w-full h-4 bg-nesBlack border border-nesWhite p-0.5">
+                            <div class="h-full w-[95%] gauge-bar"></div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="font-arcade text-[10px] text-pipeGreen">MAINTENANCE FREE <span class="font-dot text-xs text-nesWhite">(けんろう)</span></span>
+                            <span class="font-arcade text-[10px]">92 / 99</span>
+                        </div>
+                        <div class="w-full h-4 bg-nesBlack border border-nesWhite p-0.5">
+                            <div class="h-full w-[92%] gauge-bar"></div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="font-arcade text-[10px] text-marioRed">PUNK & 8BIT SOUL <span class="font-dot text-xs text-nesWhite">(あそびごころ)</span></span>
+                            <span class="font-arcade text-[10px]">99 / 99</span>
+                        </div>
+                        <div class="w-full h-4 bg-nesBlack border border-nesWhite p-0.5">
+                            <div class="h-full w-full gauge-bar"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="md:col-span-6 space-y-3 text-base">
+                    <div class="flex justify-between py-2 border-b border-nesWhite/30">
+                        <span class="text-coinGold">E: みぎて（あいぼうPC）</span>
+                        <span class="font-arcade text-[10px] sm:text-xs">ThinkPad</span>
+                    </div>
+                    <div class="flex justify-between py-2 border-b border-nesWhite/30">
+                        <span class="text-coinGold">E: ひだりて（きそぎじゅつ）</span>
+                        <span class="font-arcade text-[10px] sm:text-xs">HTML5 / Tailwind / JS</span>
+                    </div>
+                    <div class="flex justify-between py-2 border-b border-nesWhite/30">
+                        <span class="text-coinGold">E: あたま（AI・にんしょう）</span>
+                        <span class="font-arcade text-[10px] sm:text-xs">Gen-AI / Supabase</span>
+                    </div>
+                    <div class="flex justify-between py-2 border-b border-nesWhite/30">
+                        <span class="text-coinGold">E: あし（きどうりょく）</span>
+                        <span class="font-arcade text-[10px] sm:text-xs">Little Cub / NB 996</span>
+                    </div>
+                    <div class="flex justify-between py-2">
+                        <span class="text-coinGold">E: あくせさりー（るーつ）</span>
+                        <span class="font-arcade text-[10px] sm:text-xs">8bit-16bit & 90s Punk</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 04. CONTACT -->
+        <section id="contact" class="dq-window p-8 sm:p-12 text-center space-y-6">
+            <p class="font-arcade text-xs text-coinGold tracking-widest">04 / SAVE POINT & CONTACT</p>
+            <h2 class="text-2xl sm:text-3xl text-nesWhite">
+                あたらしい ぷろじぇくとの ぼうけんへ でますか？
+            </h2>
+            <p class="text-base text-nesWhite/90 max-w-lg mx-auto leading-relaxed">
+                「まずは1ページの試作品を見てみたい」「お店の特設サイトや、クローズドな記念アルバムを作ってほしい」など、気軽にはなしかけてください。
+            </p>
+
+            <div class="inline-flex flex-col sm:flex-row items-center gap-6 pt-4">
+                <a href="mailto:hello@example.com" class="pixel-btn px-8 py-4 text-base sm:text-lg tracking-widest">
+                    ▶ はい（そうだんしてみる）
+                </a>
+                <a href="#" class="px-6 py-4 border-2 border-nesWhite/50 text-nesWhite/80 hover:text-nesWhite hover:border-nesWhite text-base">
+                     いいえ（さいしょからみる）
+                </a>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- フッター -->
+    <footer class="border-t-4 border-pipeGreen bg-nesBlack py-8 text-center space-y-2">
+        <div class="font-arcade text-[10px] text-pipeGreen tracking-widest">
+            THANK YOU FOR PLAYING!
+        </div>
+        <p class="text-xs text-nesWhite/60 font-arcade">
+            &copy; 1982-2026 PIXEL & LOGIC STUDIO KYOTO.
+        </p>
+    </footer>
+
+    <!-- ==========================================
+         初代ドラクエ戦闘画面風 ポップアップモーダル
+         ========================================== -->
+    <div id="dq-battle-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-none">
+        
+        <!-- フィールド背景枠（初代DQの緑の草原タイル風） -->
+        <div id="dq-battle-container" class="dq-field-bg border-4 border-nesWhite w-full max-w-2xl p-3 sm:p-6 relative shadow-2xl">
+            
+            <!-- 上段〜中段：左ステータス窓 ＋ 中央モンスター（リンク先プレビュー） ＋ 右上コマンド窓 -->
+            <div class="grid grid-cols-12 gap-3 sm:gap-4 items-start">
+                
+                <!-- 1. 左上：ステータス窓（「あれく」風） -->
+                <div class="col-span-5 sm:col-span-4 dq-window p-3 sm:p-4 pt-5 text-sm sm:text-base z-20">
+                    <span class="dq-label text-sm sm:text-base">でぃれくた</span>
+                    <div class="space-y-1 font-dot leading-tight">
+                        <div class="flex justify-between">
+                            <span>レベル</span>
+                            <span id="modal-lv" class="font-arcade text-xs">44</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-arcade text-xs">HP</span>
+                            <span id="modal-hp" class="font-arcade text-xs">100</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-arcade text-xs">MP</span>
+                            <span id="modal-mp" class="font-arcade text-xs">99</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-arcade text-xs">G</span>
+                            <span id="modal-gold" class="font-arcade text-xs">2026</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-arcade text-xs">E</span>
+                            <span id="modal-exp" class="font-arcade text-xs">19820</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. 右上：コマンド窓（「たたかう / じゅもん / にげる / どうぐ」風） -->
+                <div class="col-span-7 sm:col-span-8 space-y-3">
+                    <div class="dq-window p-3 sm:p-4 pt-5 z-20">
+                        <span class="dq-label text-sm sm:text-base">コマンド</span>
+                        <div class="grid grid-cols-2 gap-y-2 gap-x-2 text-sm sm:text-lg">
+                            <!-- たたかう位置 ＝ リンク先へ飛ぶ -->
+                            <a id="modal-link-btn" href="#" target="_blank" rel="noopener noreferrer" class="command-item active-cmd text-coinGold hover:underline">
+                                みにいく
+                            </a>
+                            <!-- じゅもん位置 ＝ 技術・構成を見る -->
+                            <button type="button" onclick="showSpellMessage()" class="command-item hover:text-coinGold">
+                                じゅもん
+                            </button>
+                            <!-- にげる位置 ＝ ウィンドウを閉じる -->
+                            <button type="button" onclick="closeBattleModal()" class="command-item hover:text-coinGold">
+                                にげる
+                            </button>
+                            <!-- どうぐ位置 ＝ 制作ツールを見る -->
+                            <button type="button" onclick="showToolMessage()" class="command-item hover:text-coinGold">
+                                どうぐ
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 3. 中央：初代ドラクエ戦闘グラフィック枠（青空＋山＋草原＋リンク先カード） -->
+                    <div class="border-4 border-nesBlack bg-dqSky relative overflow-hidden aspect-[4/3] shadow-lg flex flex-col justify-between">
+                        
+                        <!-- 上半分：青空と白いドット雲＆山並み -->
+                        <div class="relative h-1/2 w-full">
+                            <!-- ドット雲 -->
+                            <div class="absolute top-3 left-6 w-10 h-2 bg-nesWhite shadow-[4px_2px_0_#fcfcfc,-4px_2px_0_#fcfcfc]"></div>
+                            <div class="absolute top-5 right-8 w-12 h-2 bg-nesWhite shadow-[4px_2px_0_#fcfcfc,-4px_2px_0_#fcfcfc]"></div>
+                            <!-- 奥の山並み（SVGドット風） -->
+                            <svg class="absolute bottom-0 left-0 w-full h-10 pixel-svg" viewBox="0 0 64 16" preserveAspectRatio="none">
+                                <polygon points="0,16 10,2 22,16" fill="#887000"/>
+                                <polygon points="10,2 14,16 6,16" fill="#c8b040"/>
+                                <polygon points="42,16 52,4 64,16" fill="#787878"/>
+                                <polygon points="52,4 56,16 48,16" fill="#fcfcfc"/>
+                            </svg>
+                        </div>
+
+                        <!-- 下半分：黄緑の草原 -->
+                        <div class="h-1/2 w-full bg-dqGrass border-t-2 border-nesBlack"></div>
+
+                        <!-- 中央に鎮座する「モンスター＝リンク先プレビュー＆直通ボタン」 -->
+                        <div class="absolute inset-0 flex flex-col items-center justify-center p-3 text-center z-10">
+                            <div class="bg-nesBlack/90 border-2 border-nesWhite p-3 sm:p-4 max-w-[90%] space-y-2 shadow-[4px_4px_0_#000]">
+                                <div id="modal-icon" class="flex justify-center"></div>
+                                <div id="modal-stage-title" class="font-arcade text-[10px] sm:text-xs text-coinGold"></div>
+                                <div id="modal-url-display" class="font-arcade text-[8px] text-rockCyan truncate max-w-[200px] mx-auto"></div>
+                                <div class="pt-1">
+                                    <a id="modal-center-link" href="#" target="_blank" rel="noopener noreferrer" class="pixel-btn font-dot text-xs sm:text-sm px-4 py-1.5">
+                                        ▶ サイトへ とぶ（別窓）
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- 4. 下段：メッセージウィンドウ（リンク先の説明を表示） -->
+            <div class="mt-4 dq-window p-4 sm:p-6 min-h-[130px] flex flex-col justify-between text-base sm:text-lg leading-relaxed z-20">
+                <div class="space-y-2">
+                    <p id="modal-appear-text" class="text-coinGold"></p>
+                    <p id="modal-desc-text" class="text-nesWhite text-sm sm:text-base"></p>
+                </div>
+                <div class="flex justify-between items-center pt-3 border-t border-white/20 mt-3 text-xs text-nesWhite/70">
+                    <span>コマンド？</span>
+                    <button type="button" onclick="closeBattleModal()" class="text-coinGold hover:underline">
+                        [× にげる（とじる）]
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ポップアップ制御用スクリプト -->
+    <script>
+        // 各プロジェクト（ステージ）のデータ定義
+        // ※ url の部分を実際のGitHub Pagesや公開URLに書き換えるだけでそのまま機能します！
+        const stageData = {
+            stage1: {
+                name: 'みみっく きゃんでぃ',
+                enTitle: 'MIMIC CANDY FACTORY',
+                url: 'https://example.com/mimic-candy',
+                hp: '120', mp: '80', gold: '1990', exp: '01050',
+                desc: '90年代パンク＆スカの空気感をチェッカーフラッグとコラージュで表現したハンドメイド作家のショップコンセプト。',
+                spell: '＊「でぃれくたは HTMLとCSSの コラージュじゅもんを となえた！ ハンドメイドの DIY精神が 画面いっぱいに あふれだした！',
+                tool: '＊「つかった どうぐ：HTML5 / CSS Grid / パンクなタイポグラフィ',
+                svg: `<svg class="w-10 h-10 pixel-svg" viewBox="0 0 16 16"><rect width="16" height="16" fill="#0c0c0c"/><path d="M9 1h4v4h-2v2h3v3h-3v2H9v3H6v-4h2V9H5V6h3V4h1V1z" fill="#f8b800"/></svg>`
+            },
+            stage2: {
+                name: 'まんだ らむ ZINE',
+                enTitle: 'MANDA RAMU ZINE',
+                url: 'https://example.com/manda-ramu',
+                hp: '150', mp: '120', gold: '2500', exp: '02400',
+                desc: '極彩色アングラ・フェティッシュな世界観と、礼儀正しいギャルマインドの二面性をZINE（同人誌）風の装飾で構築した特設サイト。',
+                spell: '＊「でぃれくたは Tailwindの 극さいしょく（極彩色）じゅもんを となえた！ アングラなのに 読みやすい絶妙なバランスになった！',
+                tool: '＊「つかった どうぐ：Tailwind CSS / バイリンガル構成 / ZINE風ボーダー装飾',
+                svg: `<svg class="w-10 h-10 pixel-svg" viewBox="0 0 16 16"><rect width="16" height="16" fill="#0c0c0c"/><rect x="6" y="1" width="4" height="2" fill="#fcfcfc"/><rect x="7" y="3" width="2" height="3" fill="#fcfcfc"/><path d="M4 6h8v2h2v6H2V8h2V6z" fill="#a855f7"/><rect x="5" y="9" width="2" height="2" fill="#fcfcfc"/></svg>`
+            },
+            stage3: {
+                name: 'しおん 50しゅうねん',
+                enTitle: 'SHION 50th SPECIAL',
+                url: 'https://example.com/shion-50th',
+                hp: '500', mp: '255', gold: '5000', exp: '50000',
+                desc: '京都の二胡奏者・紫苑さんの50歳記念サイト。シルクアイボリーの明るい和紙トーンに、パンダと美酒の落款印を添えた上品な設計。',
+                spell: '＊「でぃれくたは シノワズリの ひきざんじゅもんを となえた！ 京都の気品と パンダの茶目っ気が 美しくとけあった！',
+                tool: '＊「つかった どうぐ：Shippori Mincho / 縦書きCSS / 🐼酒音の朱印スタンプ',
+                svg: `<svg class="w-10 h-10 pixel-svg" viewBox="0 0 16 16"><rect width="16" height="16" fill="#0c0c0c"/><rect x="2" y="2" width="3" height="3" fill="#00e8d8"/><rect x="11" y="2" width="3" height="3" fill="#00e8d8"/><rect x="3" y="4" width="10" height="9" fill="#fcfcfc"/><rect x="4" y="6" width="3" height="2" fill="#0c0c0c"/><rect x="9" y="6" width="3" height="2" fill="#0c0c0c"/><rect x="7" y="9" width="2" height="1" fill="#0c0c0c"/><rect x="6" y="11" width="4" height="1" fill="#e40058"/></svg>`
+            },
+            stage4: {
+                name: 'かぞくと いえの きろく',
+                enTitle: 'HOME & FAMILY ALBUM',
+                url: 'https://example.com/family-album-poc',
+                hp: '999', mp: '999', gold: '7777', exp: '99999',
+                desc: '不動産の成約特典として贈る「パスワード保護付き・家族とマイホームの成長記録CMS」。QRコードで親族に安全にシェアできる仕組み。',
+                spell: '＊「でぃれくたは Supabaseにんしょう（認証）を となえた！ ソースコードを 見られても 絶対に破られない 堅牢なカギがかかった！',
+                tool: '＊「つかった どうぐ：Supabase Auth / QRコード連携 / JAMstack構成',
+                svg: `<svg class="w-10 h-10 pixel-svg" viewBox="0 0 16 16"><rect width="16" height="16" fill="#0c0c0c"/><path d="M3 4h5v5H3V4zm2 2v1h1V6H5zm3 0h7v2h-2v3h-2V8H8V6z" fill="#f8b800"/></svg>`
+            },
+            stage5: {
+                name: 'ふるどうぐ と はんこ',
+                enTitle: 'VINTAGE & STAMP UI',
+                url: 'https://example.com/vintage-stamp',
+                hp: '180', mp: '160', gold: '1200', exp: '08800',
+                desc: '古道具カフェや消しゴムはんこ作家（mignon）など、手仕事の温度感と余白を大切にしたミニマルなシングルページプロトタイプ。',
+                spell: '＊「でぃれくたは ピクトグラムの そぎおとしを となえた！ 余計な装飾が消え、作品の良さが くっきりと浮かび上がった！',
+                tool: '＊「つかった どうぐ：SVGラインアニメーション / ミニマル余白設計',
+                svg: `<svg class="w-10 h-10 pixel-svg" viewBox="0 0 16 16"><rect width="16" height="16" fill="#0c0c0c"/><rect x="5" y="2" width="1" height="2" fill="#00e8d8"/><rect x="8" y="1" width="1" height="3" fill="#00e8d8"/><path d="M3 6h8v6H3V6zm8 1h2v3h-2V7zM2 13h10v1H2v-1z" fill="#fcfcfc"/></svg>`
+            },
+            boss: {
+                name: 'うぇぶ でぃれくたー',
+                enTitle: 'PIXEL & LOGIC KYOTO',
+                url: '#contact',
+                hp: '999', mp: '999', gold: '0440', exp: '65535',
+                desc: 'ファミコン・SFC世代のドット絵スピリットと「枯れた技術の水平思考」を武器に、AIと共に爆速でプロトタイプを生み出す京都の制作者。',
+                spell: '＊「でぃれくたは AI高速プロトタイピングを となえた！ 分厚い企画書よりも先に、動くサンプルが 目の前にあらわれた！',
+                tool: '＊「そうびひん：ThinkPad / りとるかぶ / NB996 / 90年代パンクの魂',
+                svg: `<svg class="w-10 h-10 pixel-svg" viewBox="0 0 16 16"><rect width="16" height="16" fill="#0c0c0c"/><rect x="1" y="4" width="14" height="8" fill="#e40058"/><rect x="2" y="5" width="12" height="6" fill="#f8b800"/><path d="M4 6h1v1h1v1H5v1H4V8H3V7h1V6z" fill="#0c0c0c"/><rect x="10" y="7" width="1" height="2" fill="#e40058"/><rect x="12" y="7" width="1" height="2" fill="#e40058"/></svg>`
+            }
+        };
+
+        let currentStageKey = 'stage1';
+
+        function openBattleModal(key) {
+            currentStageKey = key;
+            const data = stageData[key];
+            const modal = document.getElementById('dq-battle-modal');
+            const container = document.getElementById('dq-battle-container');
+
+            // データの流し込み
+            document.getElementById('modal-hp').textContent = data.hp;
+            document.getElementById('modal-mp').textContent = data.mp;
+            document.getElementById('modal-gold').textContent = data.gold;
+            document.getElementById('modal-exp').textContent = data.exp;
+
+            document.getElementById('modal-icon').innerHTML = data.svg;
+            document.getElementById('modal-stage-title').textContent = data.enTitle;
+            document.getElementById('modal-url-display').textContent = data.url;
+
+            // リンク先の設定
+            const linkBtn = document.getElementById('modal-link-btn');
+            const centerLink = document.getElementById('modal-center-link');
+            linkBtn.href = data.url;
+            centerLink.href = data.url;
+
+            if (data.url.startsWith('#')) {
+                linkBtn.removeAttribute('target');
+                centerLink.removeAttribute('target');
+                linkBtn.onclick = () => closeBattleModal();
+                centerLink.onclick = () => closeBattleModal();
+            } else {
+                linkBtn.setAttribute('target', '_blank');
+                centerLink.setAttribute('target', '_blank');
+                linkBtn.onclick = null;
+                centerLink.onclick = null;
+            }
+
+            // 出現メッセージ
+            document.getElementById('modal-appear-text').textContent = `＊「${data.name} が あらわれた！`;
+            document.getElementById('modal-desc-text').textContent = data.desc;
+
+            // モーダル表示＆エンカウント演出
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            container.classList.remove('animate-encounter');
+            void container.offsetWidth; // リフロー強制
+            container.classList.add('animate-encounter');
+        }
+
+        function showSpellMessage() {
+            const data = stageData[currentStageKey];
+            document.getElementById('modal-appear-text').textContent = '▶ じゅもん（設計思想）';
+            document.getElementById('modal-desc-text').textContent = data.spell;
+        }
+
+        function showToolMessage() {
+            const data = stageData[currentStageKey];
+            document.getElementById('modal-appear-text').textContent = '▶ どうぐ（使用技術）';
+            document.getElementById('modal-desc-text').textContent = data.tool;
+        }
+
+        function closeBattleModal() {
+            const modal = document.getElementById('dq-battle-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        // 背景の黒い部分をクリックしても閉じるように設定
+        document.getElementById('dq-battle-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeBattleModal();
+            }
+        });
+    </script>
+</body>
+</html>
