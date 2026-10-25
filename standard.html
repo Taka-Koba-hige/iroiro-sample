@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ja" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE STANDARD — Web Design & Architecture Template</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & Noto Sans JP -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Inter"', '"Noto Sans JP"', 'sans-serif'],
+                    },
+                    colors: {
+                        canvas: '#fafaf9',     // 自然な紙に近いオフホワイト
+                        ink: '#171717',        // 視認性の高いチャコールブラック
+                        muted: '#737373',      // 補助情報用のニュートラルグレー
+                        line: '#e5e5e4',       // 構造を支える1pxの罫線
+                        surface: '#f4f4f2',    // 控えめな背景面
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #fafaf9;
+            color: #171717;
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            line-height: 1.8;
+            letter-spacing: 0.02em;
+        }
+
+        /* 控えめで確実なインタラクション */
+        .work-row {
+            transition: background-color 0.2s ease, padding-left 0.2s ease;
+        }
+        .work-row:hover {
+            background-color: #f4f4f2;
+        }
+
+        /* モーダルフェードイン */
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .modal-enter {
+            animation: fade-in 0.2s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="selection:bg-ink selection:text-canvas">
+
+    <!-- ==========================================================
+         HEADER：高さを抑え、現在地と導線だけを明示するナビゲーション
+         ========================================================== -->
+    <header class="fixed top-0 left-0 w-full z-40 bg-canvas/90 backdrop-blur-sm border-b border-line">
+        <div class="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
+            <a href="#" class="text-sm font-semibold tracking-[0.15em] uppercase text-ink">
+                THE STANDARD
+            </a>
+
+            <nav class="flex items-center gap-6 sm:gap-8 text-xs sm:text-sm text-muted">
+                <a href="#philosophy" class="hover:text-ink transition-colors">Philosophy</a>
+                <a href="#works" class="hover:text-ink transition-colors">Works</a>
+                <a href="#spec" class="hover:text-ink transition-colors">Specification</a>
+                <a href="#contact" class="text-ink font-medium underline underline-offset-4 hover:opacity-70 transition-opacity">
+                    Contact
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- ==========================================================
+         MAIN CONTAINER
+         ========================================================== -->
+    <main class="max-w-5xl mx-auto px-6 pt-32 pb-28 space-y-32">
+
+        <!-- HERO：余白と文字の比率だけで立たせる導入部 -->
+        <section class="space-y-10 pt-8 sm:pt-16">
+            <p class="text-xs tracking-[0.2em] text-muted uppercase">
+                Web Design & Digital Architecture
+            </p>
+
+            <h1 class="text-3xl sm:text-5xl font-medium tracking-tight text-ink leading-[1.35] max-w-3xl">
+                かわらず、ずっと。<br>
+                使い続けられる標準をつくる。
+            </h1>
+
+            <p class="text-sm sm:text-base text-muted max-w-2xl leading-loose">
+                流行の装飾や過剰なシステムに頼らず、情報の整理と確かな基礎技術だけで構築されたWebサイト。誰にとっても迷いなく使えて、10年後も破綻しない「用の美」を設計の基準としています。
+            </p>
+
+            <div class="pt-4">
+                <a href="#works" class="inline-flex items-center gap-3 px-7 py-3.5 bg-ink text-canvas text-xs tracking-[0.15em] uppercase hover:opacity-80 transition-opacity">
+                    <span>View Archives</span>
+                    <span>↓</span>
+                </a>
+            </div>
+        </section>
+
+        <!-- 01. PHILOSOPHY：3つの基本原則（1pxの罫線によるグリッド構造） -->
+        <section id="philosophy" class="space-y-10 border-t border-line pt-12">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                <div class="md:col-span-4">
+                    <span class="text-xs tracking-[0.2em] text-muted uppercase block">01 / Philosophy</span>
+                    <h2 class="text-xl font-medium mt-2">設計の3原則</h2>
+                </div>
+                <div class="md:col-span-8 text-sm sm:text-base text-muted leading-loose">
+                    何かを足すことで個性を出すのではなく、不要な要素を削ぎ落とすことで本来の目的を浮かび上がらせます。
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 border-t border-b border-line divide-y md:divide-y-0 md:divide-x divide-line">
+                <!-- 01 -->
+                <div class="py-8 md:pr-8 space-y-4">
+                    <span class="text-xs text-muted tracking-widest">01 — CLARITY</span>
+                    <h3 class="text-base font-medium text-ink">明快な構造</h3>
+                    <p class="text-sm text-muted leading-relaxed">
+                        訪問者が目的の情報へ最短でたどり着けるよう、視線の流れと余白の比率を整理し、説明のいらない画面を設計します。
+                    </p>
+                </div>
+
+                <!-- 02 -->
+                <div class="py-8 md:px-8 space-y-4">
+                    <span class="text-xs text-muted tracking-widest">02 — DURABILITY</span>
+                    <h3 class="text-base font-medium text-ink">長期的な堅牢性</h3>
+                    <p class="text-sm text-muted leading-relaxed">
+                        成熟した標準技術（HTML / CSS / JavaScript）を土台とし、必要な機能だけを外部基盤と疎結合させることで、経年劣化や保守負担を最小限に抑えます。
+                    </p>
+                </div>
+
+                <!-- 03 -->
+                <div class="py-8 md:pl-8 space-y-4">
+                    <span class="text-xs text-muted tracking-widest">03 — PROTOTYPING</span>
+                    <h3 class="text-base font-medium text-ink">動く試作品からの対話</h3>
+                    <p class="text-sm text-muted leading-relaxed">
+                        抽象的な言葉や書類だけで議論するのではなく、初期段階から実際にブラウザで触れるプロトタイプを提示し、具体的な手触りを確かめながら完成度を高めます。
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 02. WORKS：汎用アーカイブひな形（サムネイル＋インデックス型） -->
+        <section id="works" class="space-y-10 border-t border-line pt-12">
+            <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                <div>
+                    <span class="text-xs tracking-[0.2em] text-muted uppercase block">02 / Selected Works</span>
+                    <h2 class="text-xl font-medium mt-2">制作実績・プロトタイプ</h2>
+                </div>
+                <p class="text-xs text-muted">
+                    ※ 各項目を選択すると仕様詳細とリンクが表示されます
+                </p>
+            </div>
+
+            <!-- 2カラムの端正なグリッドカード（どんな案件画像・内容にも合う16:10比率） -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-12">
+
+                <!-- Project 01 -->
+                <article onclick="openModal('p1')" class="group cursor-pointer space-y-4">
+                    <div class="aspect-[16/10] bg-surface border border-line overflow-hidden flex items-center justify-center relative">
+                        <span class="text-xs tracking-widest text-muted uppercase group-hover:scale-105 transition-transform duration-300">
+                            01 / Visual Placeholder
+                        </span>
+                    </div>
+                    <div class="flex justify-between items-baseline pt-1">
+                        <div>
+                            <h3 class="text-base font-medium text-ink group-hover:underline underline-offset-4">
+                                Project Title 01
+                            </h3>
+                            <p class="text-xs text-muted mt-1">Category / Static Website</p>
+                        </div>
+                        <span class="text-xs text-muted">2026 →</span>
+                    </div>
+                </article>
+
+                <!-- Project 02 -->
+                <article onclick="openModal('p2')" class="group cursor-pointer space-y-4">
+                    <div class="aspect-[16/10] bg-surface border border-line overflow-hidden flex items-center justify-center relative">
+                        <span class="text-xs tracking-widest text-muted uppercase group-hover:scale-105 transition-transform duration-300">
+                            02 / Visual Placeholder
+                        </span>
+                    </div>
+                    <div class="flex justify-between items-baseline pt-1">
+                        <div>
+                            <h3 class="text-base font-medium text-ink group-hover:underline underline-offset-4">
+                                Project Title 02
+                            </h3>
+                            <p class="text-xs text-muted mt-1">Category / Web Application (BaaS)</p>
+                        </div>
+                        <span class="text-xs text-muted">2026 →</span>
+                    </div>
+                </article>
+
+                <!-- Project 03 -->
+                <article onclick="openModal('p3')" class="group cursor-pointer space-y-4">
+                    <div class="aspect-[16/10] bg-surface border border-line overflow-hidden flex items-center justify-center relative">
+                        <span class="text-xs tracking-widest text-muted uppercase group-hover:scale-105 transition-transform duration-300">
+                            03 / Visual Placeholder
+                        </span>
+                    </div>
+                    <div class="flex justify-between items-baseline pt-1">
+                        <div>
+                            <h3 class="text-base font-medium text-ink group-hover:underline underline-offset-4">
+                                Project Title 03
+                            </h3>
+                            <p class="text-xs text-muted mt-1">Category / Brand Concept</p>
+                        </div>
+                        <span class="text-xs text-muted">2025 →</span>
+                    </div>
+                </article>
+
+                <!-- Project 04 -->
+                <article onclick="openModal('p4')" class="group cursor-pointer space-y-4">
+                    <div class="aspect-[16/10] bg-surface border border-line overflow-hidden flex items-center justify-center relative">
+                        <span class="text-xs tracking-widest text-muted uppercase group-hover:scale-105 transition-transform duration-300">
+                            04 / Visual Placeholder
+                        </span>
+                    </div>
+                    <div class="flex justify-between items-baseline pt-1">
+                        <div>
+                            <h3 class="text-base font-medium text-ink group-hover:underline underline-offset-4">
+                                Project Title 04
+                            </h3>
+                            <p class="text-xs text-muted mt-1">Category / Editorial & Archive</p>
+                        </div>
+                        <span class="text-xs text-muted">2025 →</span>
+                    </div>
+                </article>
+
+            </div>
+        </section>
+
+        <!-- 03. SPECIFICATION：標準仕様と設計範囲の定義表 -->
+        <section id="spec" class="space-y-10 border-t border-line pt-12">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+                <div class="md:col-span-4">
+                    <span class="text-xs tracking-[0.2em] text-muted uppercase block">03 / Specification</span>
+                    <h2 class="text-xl font-medium mt-2">標準仕様と構成</h2>
+                    <p class="text-xs text-muted mt-3 leading-relaxed">
+                        用途と運用体制に応じて、最もシンプルで無理のない構成を選択します。
+                    </p>
+                </div>
+
+                <div class="md:col-span-8">
+                    <dl class="divide-y divide-line border-t border-b border-line text-sm">
+                        <div class="py-5 grid grid-cols-1 sm:grid-cols-12 gap-2">
+                            <dt class="sm:col-span-4 text-muted">フロントエンド設計</dt>
+                            <dd class="sm:col-span-8 text-ink">HTML5 / CSS (Tailwind CSS) / Vanilla JavaScript</dd>
+                        </div>
+                        <div class="py-5 grid grid-cols-1 sm:grid-cols-12 gap-2">
+                            <dt class="sm:col-span-4 text-muted">動的機能・データベース</dt>
+                            <dd class="sm:col-span-8 text-ink">Supabase (認証・データベース) / ヘッドレスCMS連携</dd>
+                        </div>
+                        <div class="py-5 grid grid-cols-1 sm:grid-cols-12 gap-2">
+                            <dt class="sm:col-span-4 text-muted">静的サイト構成（用途）</dt>
+                            <dd class="sm:col-span-8 text-ink">店舗・企業の案内、ポートフォリオ、特設ページ（保守コスト最小・高耐久）</dd>
+                        </div>
+                        <div class="py-5 grid grid-cols-1 sm:grid-cols-12 gap-2">
+                            <dt class="sm:col-span-4 text-muted">ハイブリッド構成（用途）</dt>
+                            <dd class="sm:col-span-8 text-ink">会員・親族限定ページ、小規模な更新システム、条件マッチング検索</dd>
+                        </div>
+                        <div class="py-5 grid grid-cols-1 sm:grid-cols-12 gap-2">
+                            <dt class="sm:col-span-4 text-muted">制作プロセス</dt>
+                            <dd class="sm:col-span-8 text-ink">ヒアリング → プロトタイプ提示（動作確認） → 本実装・公開</dd>
+                        </div>
+                    </dl>
+                </div>
+            </div>
+        </section>
+
+        <!-- 04. CONTACT：静かで簡潔な問い合わせセクション -->
+        <section id="contact" class="border-t border-line pt-12">
+            <div class="bg-surface border border-line p-8 sm:p-14 flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
+                <div class="space-y-3 max-w-xl">
+                    <span class="text-xs tracking-[0.2em] text-muted uppercase block">04 / Contact</span>
+                    <h2 class="text-xl sm:text-2xl font-medium text-ink">
+                        制作のご相談・プロトタイプのご依頼
+                    </h2>
+                    <p class="text-sm text-muted leading-relaxed">
+                        新規サイトの立ち上げや既存サイトのスリム化など、まずは小さな試作品づくりからお気軽にご相談ください。
+                    </p>
+                </div>
+
+                <div class="shrink-0">
+                    <a href="mailto:hello@example.com" class="inline-block px-8 py-4 bg-ink text-canvas text-xs tracking-[0.15em] uppercase hover:opacity-80 transition-opacity">
+                        Send Message →
+                    </a>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ==========================================================
+         FOOTER
+         ========================================================== -->
+    <footer class="max-w-5xl mx-auto px-6 py-10 border-t border-line flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-muted">
+        <div>&copy; 2026 THE STANDARD. All rights reserved.</div>
+        <div class="tracking-widest uppercase">Built for Longevity</div>
+    </footer>
+
+    <!-- ==========================================================
+         MODAL：プロジェクト詳細・リンク表示用ひな形ウィンドウ
+         ========================================================== -->
+    <div id="detail-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-ink/40 backdrop-blur-[2px]">
+        <div id="detail-modal-box" class="bg-canvas border border-line max-w-xl w-full p-6 sm:p-10 shadow-xl space-y-6">
+            
+            <div class="flex justify-between items-start border-b border-line pb-4">
+                <div>
+                    <span id="modal-category" class="text-xs tracking-widest text-muted uppercase block"></span>
+                    <h3 id="modal-title" class="text-xl font-medium text-ink mt-1"></h3>
+                </div>
+                <button onclick="closeModal()" class="text-xs text-muted hover:text-ink px-2 py-1">
+                    CLOSE [✕]
+                </button>
+            </div>
+
+            <!-- プレビュー表示枠 -->
+            <div class="aspect-[16/9] bg-surface border border-line flex items-center justify-center">
+                <span id="modal-url-preview" class="text-xs text-muted tracking-wider"></span>
+            </div>
+
+            <!-- 解説テキスト -->
+            <div class="space-y-4 text-sm">
+                <p id="modal-desc" class="text-ink leading-relaxed"></p>
+                <div class="pt-3 border-t border-line flex justify-between text-xs text-muted">
+                    <span>Architecture:</span>
+                    <span id="modal-tech" class="text-ink"></span>
+                </div>
+            </div>
+
+            <!-- アクションボタン -->
+            <div class="pt-2 flex justify-end gap-4">
+                <button onclick="closeModal()" class="px-5 py-2.5 border border-line text-xs text-muted hover:text-ink">
+                    閉じる
+                </button>
+                <a id="modal-link" href="#" target="_blank" rel="noopener noreferrer" class="px-6 py-2.5 bg-ink text-canvas text-xs tracking-wider uppercase hover:opacity-80 transition-opacity">
+                    サイトを開く →
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 汎用データ定義スクリプト（ここを書き換えるだけで運用可能） -->
+    <script>
+        const projects = {
+            p1: {
+                title: 'Project Title 01',
+                category: '01 / Static Website',
+                desc: 'プロジェクトの目的、ターゲット、および設計上の工夫をここに記述します。不要な装飾を省き、情報の見やすさと表示速度を最優先に設計した標準的な静的サイトの構成例です。',
+                tech: 'HTML5 / Tailwind CSS / JavaScript',
+                url: 'https://example.com/project-01'
+            },
+            p2: {
+                title: 'Project Title 02',
+                category: '02 / Web Application (BaaS)',
+                desc: '外観はシンプルな静的構造を保ちながら、パスワード認証やデータベース連携などの必要な動的機能のみを外部BaaS（Supabase等）と接続したハイブリッド構成の事例です。',
+                tech: 'HTML5 / JavaScript / Supabase',
+                url: 'https://example.com/project-02'
+            },
+            p3: {
+                title: 'Project Title 03',
+                category: '03 / Brand Concept',
+                desc: '店舗やブランドの空気感を伝えるためのシングルページ構成。写真と余白、タイポグラフィのバランスを整え、スマートフォンからでも直感的に閲覧できるレイアウトです。',
+                tech: 'HTML5 / CSS Grid / Responsive UI',
+                url: 'https://example.com/project-03'
+            },
+            p4: {
+                title: 'Project Title 04',
+                category: '04 / Editorial & Archive',
+                desc: '複数の記事や作品を整理して見せるアーカイブ型のレイアウト。長期的な運用でも構造が崩れないモジュール設計を採用しています。',
+                tech: 'HTML5 / Modular Grid',
+                url: 'https://example.com/project-04'
+            }
+        };
+
+        function openModal(id) {
+            const data = projects[id];
+            const modal = document.getElementById('detail-modal');
+            const box = document.getElementById('detail-modal-box');
+
+            document.getElementById('modal-title').textContent = data.title;
+            document.getElementById('modal-category').textContent = data.category;
+            document.getElementById('modal-desc').textContent = data.desc;
+            document.getElementById('modal-tech').textContent = data.tech;
+            document.getElementById('modal-url-preview').textContent = data.url;
+            document.getElementById('modal-link').href = data.url;
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            box.classList.remove('modal-enter');
+            void box.offsetWidth;
+            box.classList.add('modal-enter');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('detail-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        document.getElementById('detail-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeModal();
+        });
+    </script>
+</body>
+</html>

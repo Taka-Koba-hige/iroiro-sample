@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="ja" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE STANDARD — 用の美と、枯れた技術のWeb設計</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter (Apple/Google系の端正なサンセリフ) & Noto Sans JP & JetBrains Mono (スペック表記用) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Inter"', '"Noto Sans JP"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    },
+                    colors: {
+                        stdBg: '#f5f5f7',        // Appleの象徴的なライトグレー背景
+                        stdSurface: '#ffffff',   // 清潔な純白サーフェス
+                        stdText: '#1d1d1f',      // 視認性が最も高いチャコールブラック
+                        stdSub: '#6e6e73',       // 落ち着いたセカンダリテキスト
+                        stdBorder: '#e5e5ea',    // 主張しない1pxの境界線
+                        mujiRed: '#7f0019',      // 無印良品風の深いエンジ色（知的な差し色）
+                        uniqloRed: '#e60012',    // ユニクロ・タグ風の鮮やかなアクセントレッド
+                        birdBlue: '#1da1f2',     // 旧Twitterの爽やかなスカイブルー
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #f5f5f7;
+            color: #1d1d1f;
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            letter-spacing: -0.01em;
+        }
+
+        /* Apple風 Bento Grid カードの滑らかなホバー */
+        .bento-card {
+            background-color: #ffffff;
+            border-radius: 20px;
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            cursor: pointer;
+        }
+        .bento-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.07);
+            border-color: rgba(0, 0, 0, 0.14);
+        }
+
+        /* 無印・ユニクロ風の品質表示スペックタグ */
+        .spec-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            background-color: #f5f5f7;
+            color: #515154;
+            padding: 3px 8px;
+            border-radius: 6px;
+            border: 1px solid #e5e5ea;
+        }
+
+        /* モーダルオープン時の軽快なスプリングアニメーション */
+        @keyframes modal-pop {
+            0% { opacity: 0; transform: scale(0.96) translateY(8px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .animate-modal {
+            animation: modal-pop 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+    </style>
+</head>
+<body class="selection:bg-birdBlue/15 selection:text-birdBlue">
+
+    <!-- ==========================================================
+         固定ヘッダー：Appleのすりガラス感 × ユニクロの明快なロゴバッジ
+         ========================================================== -->
+    <header class="fixed top-0 left-0 w-full z-40 bg-white/80 backdrop-blur-md border-b border-stdBorder">
+        <div class="max-w-5xl mx-auto px-5 h-14 flex items-center justify-between">
+            <!-- 左：THE STANDARD ロゴマーク -->
+            <a href="#" class="flex items-center gap-3 group">
+                <div class="w-7 h-7 bg-uniqloRed text-white flex items-center justify-center font-bold text-xs tracking-tighter rounded-sm">
+                    STD
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <span class="font-bold text-sm tracking-tight text-stdText">THE STANDARD</span>
+                    <span class="hidden sm:inline-block font-mono text-[11px] text-stdSub">KYOTO WEB UTILITIES</span>
+                </div>
+            </a>
+
+            <!-- 右：迷わせない4つのシンプルナビゲーション -->
+            <nav class="flex items-center gap-5 sm:gap-7 text-xs sm:text-sm font-medium text-stdSub">
+                <a href="#concept" class="hover:text-stdText transition-colors">コンセプト</a>
+                <a href="#products" class="hover:text-stdText transition-colors">つくったもの</a>
+                <a href="#quality" class="hover:text-stdText transition-colors">品質表示</a>
+                <a href="#contact" class="px-3.5 py-1.5 bg-stdText text-white rounded-full text-xs font-medium hover:bg-birdBlue transition-colors">
+                    相談する
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <main class="max-w-5xl mx-auto px-5 pt-28 pb-24 space-y-24">
+
+        <!-- ==========================================================
+             HERO SECTION：Googleの潔さ × LifeWearの普遍性
+             ========================================================== -->
+        <section class="text-center space-y-8 pt-4">
+            <!-- 小さなピクトグラム＆ステータスバッジ -->
+            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white border border-stdBorder rounded-full shadow-sm">
+                <span class="w-2 h-2 rounded-full bg-birdBlue"></span>
+                <span class="font-mono text-xs text-stdSub">MADE FOR EVERYDAY USE — 10-YEAR DURABILITY</span>
+            </div>
+
+            <!-- メインコピー：無駄な修飾を削ぎ落としたタイポグラフィ -->
+            <div class="space-y-4 max-w-3xl mx-auto">
+                <h1 class="text-3xl sm:text-5xl md:text-[54px] font-bold tracking-tight text-stdText leading-[1.2]">
+                    白Tシャツのように、<br>
+                    毎日使えて、10年壊れないWebを。
+                </h1>
+                <p class="text-base sm:text-lg text-stdSub leading-relaxed max-w-2xl mx-auto pt-2">
+                    奇抜なアニメーションや、毎月数万円かかる複雑なシステムはいりません。<br class="hidden sm:inline">
+                    無印良品のような「素直な構造」と、かつての青い鳥のような「軽快な使い心地」。<br class="hidden sm:inline">
+                    あなたのお店の魅力だけをまっすぐ届ける、普遍的なWebサイトを設計します。
+                </p>
+            </div>
+
+            <!-- Google検索窓のようにシンプルで直感的なアクションバー -->
+            <div class="max-w-lg mx-auto bg-white p-2 rounded-full border border-stdBorder shadow-sm flex items-center justify-between gap-2">
+                <div class="flex items-center gap-3 pl-4 text-stdSub text-xs sm:text-sm truncate">
+                    <svg class="w-4 h-4 text-birdBlue shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    <span>シンプル・高速・維持費ゼロのWeb設計</span>
+                </div>
+                <a href="#products" class="px-5 py-2.5 bg-stdText text-white text-xs sm:text-sm font-medium rounded-full hover:bg-birdBlue transition-colors shrink-0">
+                    製品一覧を見る
+                </a>
+            </div>
+        </section>
+
+        <!-- ==========================================================
+             01. CONCEPT：無印良品のタグのように語る「3つのわけ」
+             ========================================================== -->
+        <section id="concept" class="space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-2 border-b border-stdBorder pb-4">
+                <div>
+                    <span class="font-mono text-xs text-mujiRed font-medium tracking-wider">01 / WHY "THE STANDARD"?</span>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-stdText mt-1">わけあって、シンプルです。</h2>
+                </div>
+                <p class="text-xs sm:text-sm text-stdSub">「枯れた技術の水平思考」にもとづく3つの設計基準</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <!-- 基準 1 -->
+                <div class="bg-white p-7 rounded-2xl border border-stdBorder flex flex-col justify-between space-y-6">
+                    <div class="space-y-3">
+                        <div class="w-10 h-10 rounded-xl bg-stdBg flex items-center justify-center text-stdText">
+                            <!-- ピクトグラム：シンプルなTシャツ/器 -->
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h10"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-bold text-stdText">1. 主役を邪魔しない「器」</h3>
+                        <p class="text-sm text-stdSub leading-relaxed">
+                            良い普段着が着る人自身を引き立てるように、Webサイトも「デザインの自己主張」を控え、あなたの商品・空間・人柄が一番きれいに見える余白と文字組みに徹します。
+                        </p>
+                    </div>
+                    <div class="pt-4 border-t border-stdBorder flex justify-between items-center">
+                        <span class="spec-tag">UI: PICTOGRAPHIC</span>
+                        <span class="font-mono text-[11px] text-stdSub">0.5秒で迷わない</span>
+                    </div>
+                </div>
+
+                <!-- 基準 2 -->
+                <div class="bg-white p-7 rounded-2xl border border-stdBorder flex flex-col justify-between space-y-6">
+                    <div class="space-y-3">
+                        <div class="w-10 h-10 rounded-xl bg-stdBg flex items-center justify-center text-stdText">
+                            <!-- ピクトグラム：シールド/堅牢 -->
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-bold text-stdText">2. 10年壊れない「素の技術」</h3>
+                        <p class="text-sm text-stdSub leading-relaxed">
+                            アップデートを放置すると画面が真っ白になるような複雑なCMSは使いません。成熟したHTML/CSSをベースに、必要な箇所だけ安全な外部認証（Supabase）を繋ぎ、維持費ほぼゼロで運用できます。
+                        </p>
+                    </div>
+                    <div class="pt-4 border-t border-stdBorder flex justify-between items-center">
+                        <span class="spec-tag">TECH: HTML + BaaS</span>
+                        <span class="font-mono text-[11px] text-stdSub">保守費 0円〜</span>
+                    </div>
+                </div>
+
+                <!-- 基準 3 -->
+                <div class="bg-white p-7 rounded-2xl border border-stdBorder flex flex-col justify-between space-y-6">
+                    <div class="space-y-3">
+                        <div class="w-10 h-10 rounded-xl bg-stdBg flex items-center justify-center text-birdBlue">
+                            <!-- ピクトグラム：稲妻/スピード -->
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-bold text-stdText">3. 企画書より先に「試作品」を</h3>
+                        <p class="text-sm text-stdSub leading-relaxed">
+                            何十ページもある提案書で時間をかける代わりに、AIとの協働によって数日で「実際にスマホで触れる試作品」をお見せします。試着室で服を合わせるような感覚で制作を進められます。
+                        </p>
+                    </div>
+                    <div class="pt-4 border-t border-stdBorder flex justify-between items-center">
+                        <span class="spec-tag">FLOW: AI PROTOTYPE</span>
+                        <span class="font-mono text-[11px] text-stdSub">最短即日モック提示</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================================
+             02. PRODUCTS：Appleの「Bento Grid」× ユニクロの「ラインナップ」
+             （クリックで詳細スペックとリンク先のクイックルックが開く）
+             ========================================================== -->
+        <section id="products" class="space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-2 border-b border-stdBorder pb-4">
+                <div>
+                    <span class="font-mono text-xs text-mujiRed font-medium tracking-wider">02 / PRODUCT LINEUP & ARCHIVES</span>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-stdText mt-1">つくったもの（製品一覧）</h2>
+                </div>
+                <p class="text-xs sm:text-sm text-birdBlue font-medium">
+                    ● カードをクリックすると「品質表示（詳細）」と「実際のサイトへのリンク」が開きます
+                </p>
+            </div>
+
+            <!-- Bento Grid（12カラムを使った心地よい非対称モジュラーグリッド） -->
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-5">
+
+                <!-- ITEM 01 (大型8列): 不動産×家族の成長記録システム -->
+                <article onclick="openStdModal('item1')" class="md:col-span-7 bento-card p-7 sm:p-9 flex flex-col justify-between min-h-[300px]">
+                    <div class="space-y-4">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <span class="px-2.5 py-1 bg-birdBlue/10 text-birdBlue font-mono text-xs font-medium rounded-md">
+                                HYBRID SYSTEM (静的 + Supabase)
+                            </span>
+                            <span class="font-mono text-xs text-stdSub">MODEL No. STD-001</span>
+                        </div>
+                        <h3 class="text-xl sm:text-2xl font-bold text-stdText">
+                            住まいと家族の成長記録アルバム（不動産成約特典システム）
+                        </h3>
+                        <p class="text-sm text-stdSub leading-relaxed">
+                            家を引き渡して終わりではなく、その家で重なる家族の時間を安全に記録・共有できるパスワード保護付きWebアルバム。QRコードひとつで親族にだけ公開できる、地域密着・ブティック系不動産会社のための新しい顧客体験ツールです。
+                        </p>
+                    </div>
+                    <div class="pt-6 mt-6 border-t border-stdBorder flex flex-wrap items-center justify-between gap-2">
+                        <div class="flex gap-2">
+                            <span class="spec-tag">HTML5</span>
+                            <span class="spec-tag">Supabase Auth</span>
+                            <span class="spec-tag">QR共有</span>
+                        </div>
+                        <span class="text-xs font-medium text-birdBlue flex items-center gap-1">
+                            詳細・デモを見る <span>→</span>
+                        </span>
+                    </div>
+                </article>
+
+                <!-- ITEM 02 (中型5列): 京都の二胡奏者・紫苑 50周年記念サイト -->
+                <article onclick="openStdModal('item2')" class="md:col-span-5 bento-card p-7 sm:p-9 flex flex-col justify-between min-h-[300px]">
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="px-2.5 py-1 bg-stdBg text-stdText font-mono text-xs font-medium rounded-md">
+                                STATIC LP (特設サイト)
+                            </span>
+                            <span class="font-mono text-xs text-stdSub">STD-002</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-stdText">
+                            二胡奏者・紫苑 50周年記念サイト
+                        </h3>
+                        <p class="text-sm text-stdSub leading-relaxed">
+                            明るい和紙のようなトーンをベースに、シノワズリの窓枠とご本人の愛する「パンダと美酒」を小さな朱印（ピクトグラム）として添えた上品な1ページ設計。
+                        </p>
+                    </div>
+                    <div class="pt-6 mt-6 border-t border-stdBorder flex items-center justify-between">
+                        <div class="flex gap-2">
+                            <span class="spec-tag">Minimal UI</span>
+                            <span class="spec-tag">縦書き明朝</span>
+                        </div>
+                        <span class="text-xs font-medium text-birdBlue">詳細・リンク →</span>
+                    </div>
+                </article>
+
+                <!-- ITEM 03 (4列): 古道具カフェ＆消しゴムはんこ作家 (mignon) -->
+                <article onclick="openStdModal('item3')" class="md:col-span-4 bento-card p-7 flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="spec-tag">SMALL SHOP</span>
+                            <span class="font-mono text-xs text-stdSub">STD-003</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-stdText">
+                            古道具カフェ ＆ はんこ作家（mignon）
+                        </h3>
+                        <p class="text-sm text-stdSub leading-relaxed">
+                            手仕事のインクのかすれや古材の温度感を活かすため、余白と繊細なSVGラインだけで構成したシングルページ。
+                        </p>
+                    </div>
+                    <div class="pt-5 mt-5 border-t border-stdBorder flex justify-between items-center text-xs">
+                        <span class="text-stdSub font-mono">SVG / Responsive</span>
+                        <span class="text-birdBlue font-medium">詳細 →</span>
+                    </div>
+                </article>
+
+                <!-- ITEM 04 (4列): MIMIC CANDY FACTORY -->
+                <article onclick="openStdModal('item4')" class="md:col-span-4 bento-card p-7 flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="spec-tag">BRAND & EC</span>
+                            <span class="font-mono text-xs text-stdSub">STD-004</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-stdText">
+                            MIMIC CANDY FACTORY
+                        </h3>
+                        <p class="text-sm text-stdSub leading-relaxed">
+                            90年代パンク＆スカのDIY精神を、整然としたグリッドとチェッカーフラッグの記号性でポップに整理したショップ設計。
+                        </p>
+                    </div>
+                    <div class="pt-5 mt-5 border-t border-stdBorder flex justify-between items-center text-xs">
+                        <span class="text-stdSub font-mono">CSS Grid / Brand</span>
+                        <span class="text-birdBlue font-medium">詳細 →</span>
+                    </div>
+                </article>
+
+                <!-- ITEM 05 (4列): サブカルチャーZINE ＆ 8bit/16bit 実験室 -->
+                <article onclick="openStdModal('item5')" class="md:col-span-4 bento-card p-7 flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="spec-tag">PLAYGROUND</span>
+                            <span class="font-mono text-xs text-stdSub">STD-005</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-stdText">
+                            ZINE & 8bit/16bit UI 実験室
+                        </h3>
+                        <p class="text-sm text-stdSub leading-relaxed">
+                            標準を熟知しているからこそ作れる「遊び心」。同人誌風レイアウトや名作レトロゲームUIをコードだけで再現したコレクション。
+                        </p>
+                    </div>
+                    <div class="pt-5 mt-5 border-t border-stdBorder flex justify-between items-center text-xs">
+                        <span class="text-stdSub font-mono">Pure CSS / SVG</span>
+                        <span class="text-birdBlue font-medium">詳細 →</span>
+                    </div>
+                </article>
+
+            </div>
+        </section>
+
+        <!-- ==========================================================
+             03. QUALITY LABEL：無印良品の「品質表示タグ」風スペック＆使い分け表
+             ========================================================== -->
+        <section id="quality" class="bg-white rounded-3xl border border-stdBorder p-7 sm:p-12 shadow-sm">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+                
+                <!-- 左：無印のクラフトタグ風・制作者情報（5列） -->
+                <div class="lg:col-span-5 bg-stdBg rounded-2xl p-6 sm:p-8 border border-stdBorder space-y-6">
+                    <div class="border-b-2 border-mujiRed pb-3 flex justify-between items-baseline">
+                        <span class="font-bold text-base text-mujiRed tracking-wider">品質表示 / SPECIFICATION</span>
+                        <span class="font-mono text-xs text-stdSub">KYOTO, JPN</span>
+                    </div>
+
+                    <dl class="space-y-3 text-xs sm:text-sm divide-y divide-stdBorder">
+                        <div class="pt-2 flex justify-between">
+                            <dt class="text-stdSub">品名</dt>
+                            <dd class="font-medium text-stdText">実用Webデザイン・AIディレクション</dd>
+                        </div>
+                        <div class="pt-3 flex justify-between">
+                            <dt class="text-stdSub">主素材（フロント）</dt>
+                            <dd class="font-mono text-xs text-stdText">HTML5 (100%), Tailwind CSS</dd>
+                        </div>
+                        <div class="pt-3 flex justify-between">
+                            <dt class="text-stdSub">副素材（認証・DB）</dt>
+                            <dd class="font-mono text-xs text-stdText">Supabase (Auth / PostgreSQL)</dd>
+                        </div>
+                        <div class="pt-3 flex justify-between">
+                            <dt class="text-stdSub">制作拠点・機動力</dt>
+                            <dd class="text-stdText">京都（ThinkPad / Little Cub）</dd>
+                        </div>
+                        <div class="pt-3 flex justify-between">
+                            <dt class="text-stdSub">お取り扱い上の注意</dt>
+                            <dd class="text-stdText text-right">不要なプラグインを入れて重くしないでください。</dd>
+                        </div>
+                    </dl>
+
+                    <p class="text-xs text-stdSub leading-relaxed bg-white p-4 rounded-xl border border-stdBorder">
+                        無地のTシャツと履き慣れたスニーカー（NB）、G-SHOCKを愛用するように、「奇をてらわず、毎日気持ちよく使えて、長く持つもの」だけを誠実に作っています。
+                    </p>
+                </div>
+
+                <!-- 右：クライアントが迷わない「2つのプラン（静的 vs ハイブリッド）」（7列） -->
+                <div class="lg:col-span-7 space-y-6">
+                    <div>
+                        <span class="font-mono text-xs text-mujiRed font-medium">03 / SELECT YOUR PLAN</span>
+                        <h2 class="text-2xl font-bold text-stdText mt-1">目的に合わせた、2つのつくりかた。</h2>
+                        <p class="text-sm text-stdSub mt-2">
+                            すべてのサイトに重たいシステムを入れる必要はありません。用途に合わせて最適な構成をご提案します。
+                        </p>
+                    </div>
+
+                    <div class="space-y-4">
+                        <!-- パターンA：純粋な静的サイト -->
+                        <div class="p-5 rounded-2xl border border-stdBorder hover:border-stdText transition-colors space-y-2">
+                            <div class="flex justify-between items-center">
+                                <span class="font-bold text-base text-stdText">A. スタンダード・静的サイト（看板・名刺モデル）</span>
+                                <span class="spec-tag bg-emerald-50 text-emerald-700 border-emerald-200">維持費 ほぼ0円</span>
+                            </div>
+                            <p class="text-xs sm:text-sm text-stdSub leading-relaxed">
+                                お店の紹介、ブランドの世界観提示、記念サイトなど「誰が見ても同じ情報を、最速・最も美しく届ける」ための構成。乗っ取りやシステム破損のリスクがゼロで、10年間放置しても壊れません。
+                            </p>
+                        </div>
+
+                        <!-- パターンB：ハイブリッドサイト -->
+                        <div class="p-5 rounded-2xl border border-stdBorder hover:border-stdText transition-colors space-y-2">
+                            <div class="flex justify-between items-center">
+                                <span class="font-bold text-base text-stdText">B. ハイブリッド・動的連携（鍵付き・AI検索モデル）</span>
+                                <span class="spec-tag bg-sky-50 text-birdBlue border-sky-200">Supabase / AI連携</span>
+                            </div>
+                            <p class="text-xs sm:text-sm text-stdSub leading-relaxed">
+                                外観は軽快なHTMLのまま、「パスワードを知っている家族だけが見られるアルバム」や「裏タグを使った非公開のAI物件レコメンド」など、必要な核心部分だけに最新のクラウド金庫（Supabase）を接続します。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ==========================================================
+             04. CONTACT：旧Twitterのように軽快で敷居の低い窓口
+             ========================================================== -->
+        <section id="contact" class="bg-stdText text-white rounded-3xl p-8 sm:p-14 text-center space-y-6">
+            <div class="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center mx-auto text-birdBlue">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                </svg>
+            </div>
+
+            <div class="space-y-3 max-w-xl mx-auto">
+                <h2 class="text-2xl sm:text-3xl font-bold tracking-tight">
+                    まずは「1ページの試作品」から、気軽にお話ししませんか。
+                </h2>
+                <p class="text-sm sm:text-base text-white/75 leading-relaxed">
+                    かしこまった発注書や要件定義書はいりません。「こんな雰囲気のお店なんだけど」「不動産の成約特典アルバムを一度触ってみたい」と一言いただければ、数日で動くサンプルをお作りします。
+                </p>
+            </div>
+
+            <div class="pt-2 flex flex-wrap justify-center gap-4">
+                <a href="mailto:hello@example.com" class="px-8 py-3.5 bg-white text-stdText rounded-full text-sm font-bold hover:bg-birdBlue hover:text-white transition-colors">
+                    メールで相談してみる →
+                </a>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- フッター -->
+    <footer class="max-w-5xl mx-auto px-5 py-10 border-t border-stdBorder flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-stdSub">
+        <div class="flex items-center gap-2">
+            <span class="w-4 h-4 bg-uniqloRed inline-block rounded-sm"></span>
+            <span class="font-bold text-stdText">THE STANDARD</span>
+            <span>— Web Utilities & Direction Kyoto.</span>
+        </div>
+        <div class="font-mono">
+            SIMPLE, FUNCTIONAL, BUILT TO LAST.
+        </div>
+    </footer>
+
+    <!-- ==========================================================
+         クイックルック・モーダル（Apple風のすりガラス詳細＆リンク先表示）
+         ========================================================== -->
+    <div id="std-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+        <div id="std-modal-box" class="bg-white rounded-3xl border border-stdBorder max-w-xl w-full p-6 sm:p-8 shadow-2xl space-y-6 relative">
+            
+            <!-- 上部：型番と閉じるボタン -->
+            <div class="flex justify-between items-center border-b border-stdBorder pb-4">
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-uniqloRed"></span>
+                    <span id="m-code" class="font-mono text-xs text-stdSub"></span>
+                </div>
+                <button onclick="closeStdModal()" class="w-8 h-8 rounded-full bg-stdBg text-stdSub hover:text-stdText flex items-center justify-center text-sm font-bold">
+                    ✕
+                </button>
+            </div>
+
+            <!-- 中央：タイトルと設計理由（無印タグ風解説） -->
+            <div class="space-y-3">
+                <span id="m-category" class="spec-tag"></span>
+                <h3 id="m-title" class="text-xl sm:text-2xl font-bold text-stdText pt-1"></h3>
+                <p id="m-desc" class="text-sm sm:text-base text-stdSub leading-relaxed"></p>
+            </div>
+
+            <!-- スペック詳細ボックス -->
+            <div class="bg-stdBg rounded-2xl p-4 space-y-2 text-xs border border-stdBorder">
+                <div class="flex justify-between">
+                    <span class="text-stdSub">構成・技術：</span>
+                    <span id="m-tech" class="font-mono text-stdText font-medium"></span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-stdSub">URL：</span>
+                    <span id="m-url-text" class="font-mono text-birdBlue truncate max-w-[240px]"></span>
+                </div>
+            </div>
+
+            <!-- 下部：リンク先へ飛ぶメインボタン -->
+            <div class="flex justify-end gap-3 pt-2">
+                <button onclick="closeStdModal()" class="px-5 py-2.5 rounded-full border border-stdBorder text-xs font-medium text-stdSub hover:text-stdText">
+                    閉じる
+                </button>
+                <a id="m-link" href="#" target="_blank" rel="noopener noreferrer" class="px-6 py-2.5 rounded-full bg-stdText text-white text-xs sm:text-sm font-medium hover:bg-birdBlue transition-colors">
+                    実際のサイトを開く（別窓） →
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const stdProducts = {
+            item1: {
+                code: 'MODEL No. STD-001',
+                category: 'HYBRID B2B2C SYSTEM',
+                title: '住まいと家族の成長記録アルバム',
+                desc: '不動産の引き渡し時に、施主ご家族へ贈る「パスワード保護付きの専用Webアルバム」。表側は壊れないHTML/CSSで組み、裏側の認証と写真データベースだけをSupabaseに接続することで、低コストかつ高セキュリティな長期運用を実現しています。',
+                tech: 'HTML5 / Tailwind CSS / Supabase Auth',
+                url: 'https://example.com/family-album-poc'
+            },
+            item2: {
+                code: 'MODEL No. STD-002',
+                category: 'ANNIVERSARY STATIC LP',
+                title: '京都・二胡奏者 紫苑 50周年記念サイト',
+                desc: '重厚になりがちな伝統楽器の特設ページを、自然光が差し込むような明るい和紙トーン（#fcfbfa）で設計。シノワズリの窓枠と、ご本人の愛する「パンダと美酒」を小さな朱印（ピクトグラム）に凝縮し、上品さと親しみやすさを両立させました。',
+                tech: 'HTML5 / Shippori Mincho / Minimal UI',
+                url: 'https://example.com/shion-50th'
+            },
+            item3: {
+                code: 'MODEL No. STD-003',
+                category: 'SMALL SHOP & ATELIER',
+                title: '古道具カフェ ＆ はんこ作家（mignon）',
+                desc: '滋賀・大津の古道具カフェ構想やハンドメイドスタンプ作家のためのシングルページ。サイト自体が過剰に主張せず、手仕事の温度感や写真の空気感が一番引き立つよう、余白と1pxの線画アニメーションだけで整えています。',
+                tech: 'HTML5 / SVG Line Animation / Responsive',
+                url: 'https://example.com/vintage-stamp'
+            },
+            item4: {
+                code: 'MODEL No. STD-004',
+                category: 'CRAFT BRAND & EC',
+                title: 'MIMIC CANDY FACTORY',
+                desc: '90年代パンク＆スカのDIYスピリットを持つハンドメイド作家のブランドサイト。賑やかなコラージュ感やチェッカーフラッグのモチーフを、整然としたグリッドの中に収めることで、買い物のしやすさと個性を両立しています。',
+                tech: 'HTML5 / CSS Grid / Brand Direction',
+                url: 'https://example.com/mimic-candy'
+            },
+            item5: {
+                code: 'MODEL No. STD-005',
+                category: 'EXPERIMENTAL ARCHIVES',
+                title: 'ZINE & 8bit/16bit UI 実験室',
+                desc: '「THE STANDARD」の引き算の設計思想をベースに、どれだけ多様な世界観へ翻訳できるかを試した実験室。極彩色アングラZINE（卍田ラム）や、外部画像を一切使わずコードだけで再現したファミコン・SFC風UI群を収録しています。',
+                tech: 'Pure CSS / 16x16 SVG / Tailwind',
+                url: '#concept'
+            }
+        };
+
+        function openStdModal(key) {
+            const d = stdProducts[key];
+            const modal = document.getElementById('std-modal');
+            const box = document.getElementById('std-modal-box');
+
+            document.getElementById('m-code').textContent = d.code;
+            document.getElementById('m-category').textContent = d.category;
+            document.getElementById('m-title').textContent = d.title;
+            document.getElementById('m-desc').textContent = d.desc;
+            document.getElementById('m-tech').textContent = d.tech;
+            document.getElementById('m-url-text').textContent = d.url;
+
+            const link = document.getElementById('m-link');
+            link.href = d.url;
+            if (d.url.startsWith('#')) {
+                link.removeAttribute('target');
+                link.onclick = () => closeStdModal();
+            } else {
+                link.setAttribute('target', '_blank');
+                link.onclick = null;
+            }
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            box.classList.remove('animate-modal');
+            void box.offsetWidth;
+            box.classList.add('animate-modal');
+        }
+
+        function closeStdModal() {
+            const modal = document.getElementById('std-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        document.getElementById('std-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeStdModal();
+        });
+    </script>
+</body>
+</html>
