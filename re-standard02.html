@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="ja" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE STANDARD — Web Design & Interactive Simulator</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & Noto Sans JP & Shippori Mincho -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&family=Shippori+Mincho:wght@500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Inter"', '"Noto Sans JP"', 'sans-serif'],
+                        serif: ['"Shippori Mincho"', 'serif'],
+                    },
+                    colors: {
+                        canvas: 'var(--bg-canvas)',
+                        ink: 'var(--text-ink)',
+                        muted: 'var(--text-muted)',
+                        line: 'var(--border-line)',
+                        surface: 'var(--bg-surface)',
+                        panel: 'var(--bg-panel)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* カラーテーマ変数（バーの色もナチュラルに連動） */
+        :root {
+            --bg-canvas: #fafaf9;
+            --text-ink: #171717;
+            --text-muted: #737373;
+            --border-line: #e5e5e4;
+            --bg-surface: #f4f4f2;
+            --bg-panel: rgba(244, 244, 242, 0.92); /* 重くないナチュラルなすりガラス色 */
+        }
+        [data-theme="warm"] {
+            --bg-canvas: #f6f3ec;
+            --text-ink: #26231e;
+            --text-muted: #787267;
+            --border-line: #e2ddd2;
+            --bg-surface: #ede8dd;
+            --bg-panel: rgba(237, 232, 221, 0.94);
+        }
+        [data-theme="dark"] {
+            --bg-canvas: #141413;
+            --text-ink: #f4f4f0;
+            --text-muted: #8e8e8a;
+            --border-line: #2a2a28;
+            --bg-surface: #1e1e1c;
+            --bg-panel: rgba(36, 36, 34, 0.92);
+        }
+
+        body {
+            background-color: var(--bg-canvas);
+            color: var(--text-ink);
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            line-height: 1.8;
+            letter-spacing: 0.02em;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        body.font-serif-mode h1,
+        body.font-serif-mode h2,
+        body.font-serif-mode h3 {
+            font-family: 'Shippori Mincho', serif;
+        }
+
+        /* 試着モード（編集可能テキスト）のハイライト演出 */
+        .sim-active [data-editable="true"] {
+            outline: 1px dashed rgba(115, 115, 115, 0.55);
+            outline-offset: 4px;
+            border-radius: 4px;
+            cursor: text;
+            transition: all 0.15s ease;
+        }
+        .sim-active [data-editable="true"]:hover,
+        .sim-active [data-editable="true"]:focus {
+            outline: 1.5px solid var(--text-ink);
+            background-color: rgba(128, 128, 128, 0.06);
+        }
+
+        /* 盗用防止・斜めリピート透かし */
+        .watermark-pattern {
+            background-image: repeating-linear-gradient(
+                -28deg,
+                transparent,
+                transparent 80px,
+                rgba(128, 128, 128, 0.04) 80px,
+                rgba(128, 128, 128, 0.04) 81px
+            );
+        }
+
+        /* 画像枠専用のコピーライト透かし */
+        .img-watermark::after {
+            content: "SAMPLE PREVIEW — © THE STANDARD";
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            letter-spacing: 0.2em;
+            color: var(--text-ink);
+            opacity: 0.22;
+            transform: rotate(-18deg);
+            pointer-events: none;
+            user-select: none;
+            font-weight: 600;
+        }
+
+        /* 下から伸びてくるドロワーのスムーズなトランジション */
+        #sim-drawer-wrapper {
+            transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .drawer-closed {
+            transform: translateY(calc(100% - 34px)); /* 上部のつまみ（34px分）だけ残して下に隠す */
+        }
+        .drawer-open {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body class="selection:bg-ink selection:text-canvas">
+
+    <!-- ==========================================================
+         画面全体の透かしオーバーレイ（試着モードON時のみ表示）
+         ========================================================== -->
+    <div id="global-watermark" class="fixed inset-0 z-30 pointer-events-none select-none overflow-hidden hidden opacity-90 watermark-pattern">
+        <div class="w-full h-full flex flex-col justify-around items-center transform -rotate-12 scale-125">
+            <div class="text-xs sm:text-sm tracking-[0.4em] text-muted/25 font-mono whitespace-nowrap">
+                PREVIEW ONLY — © THE STANDARD DESIGN TEMPLATE — DO NOT COPY — PREVIEW ONLY
+            </div>
+            <div class="text-xs sm:text-sm tracking-[0.4em] text-muted/25 font-mono whitespace-nowrap">
+                © THE STANDARD — ROLEPLAY SIMULATOR MODE — PROTECTED LAYOUT — © THE STANDARD
+            </div>
+            <div class="text-xs sm:text-sm tracking-[0.4em] text-muted/25 font-mono whitespace-nowrap">
+                PREVIEW ONLY — © THE STANDARD DESIGN TEMPLATE — DO NOT COPY — PREVIEW ONLY
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================================
+         HEADER
+         ========================================================== -->
+    <header class="fixed top-0 left-0 w-full z-40 bg-canvas/90 backdrop-blur-sm border-b border-line transition-colors">
+        <div class="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
+            <a href="#" id="sim-brand-name" data-editable="true" class="text-sm font-semibold tracking-[0.15em] uppercase text-ink">
+                THE STANDARD
+            </a>
+
+            <nav class="flex items-center gap-6 sm:gap-8 text-xs sm:text-sm text-muted">
+                <a href="#philosophy" class="hover:text-ink transition-colors">Philosophy</a>
+                <a href="#works" class="hover:text-ink transition-colors">Works</a>
+                <a href="#spec" class="hover:text-ink transition-colors">Specification</a>
+                <a href="#contact" class="text-ink font-medium underline underline-offset-4 hover:opacity-70 transition-opacity">
+                    Contact
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- ==========================================================
+         MAIN CONTAINER
+         ========================================================== -->
+    <main class="max-w-5xl mx-auto px-6 pt-32 pb-28 space-y-32">
+
+        <!-- HERO -->
+        <section class="space-y-10 pt-8 sm:pt-16">
+            <p id="sim-sub-label" data-editable="true" class="text-xs tracking-[0.2em] text-muted uppercase inline-block">
+                Web Design & Digital Architecture
+            </p>
+
+            <h1 id="sim-main-copy" data-editable="true" class="text-3xl sm:text-5xl font-medium tracking-wide text-ink leading-[1.5] max-w-3xl">
+                かわらず、ずっと。<br>
+                使い続けられる標準をつくる。
+            </h1>
+
+            <p id="sim-lead-text" data-editable="true" class="text-sm sm:text-base text-muted max-w-2xl leading-loose">
+                流行の装飾や過剰なシステムに頼らず、情報の整理と確かな基礎技術だけで構築されたWebサイト。誰にとっても迷いなく使えて、10年後も破綻しない「用の美」を設計の基準としています。
+            </p>
+
+            <div class="pt-4 flex flex-wrap items-center gap-4">
+                <a href="#works" class="inline-flex items-center gap-3 px-7 py-3.5 bg-ink text-canvas text-xs tracking-[0.15em] uppercase rounded-md hover:opacity-80 transition-opacity">
+                    <span>View Archives</span>
+                    <span>↓</span>
+                </a>
+                <button type="button" onclick="openAndActivateSimulator()" class="inline-flex items-center gap-2 px-5 py-3.5 border border-line bg-surface text-ink text-xs tracking-wider rounded-md hover:border-ink transition-colors">
+                    <span>✎ この画面で「試着（文字・画像の差し替え）」を体験する</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- 01. PHILOSOPHY -->
+        <section id="philosophy" class="space-y-10 border-t border-line pt-12">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                <div class="md:col-span-4">
+                    <span class="text-xs tracking-[0.2em] text-muted uppercase block">01 / Philosophy</span>
+                    <h2 data-editable="true" class="text-xl font-medium mt-2 tracking-wide">設計の3原則</h2>
+                </div>
+                <div data-editable="true" class="md:col-span-8 text-sm sm:text-base text-muted leading-loose">
+                    何かを足すことで個性を出すのではなく、不要な要素を削ぎ落とすことで本来の目的を浮かび上がらせます。
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 border-t border-b border-line divide-y md:divide-y-0 md:divide-x divide-line">
+                <div class="py-8 md:pr-8 space-y-4">
+                    <span class="text-xs text-muted tracking-widest">01 — CLARITY</span>
+                    <h3 data-editable="true" class="text-base font-medium text-ink tracking-wide">明快な構造</h3>
+                    <p data-editable="true" class="text-sm text-muted leading-relaxed">
+                        訪問者が目的の情報へ最短でたどり着けるよう、視線の流れと余白の比率を整理し、説明のいらない画面を設計します。
+                    </p>
+                </div>
+
+                <div class="py-8 md:px-8 space-y-4">
+                    <span class="text-xs text-muted tracking-widest">02 — DURABILITY</span>
+                    <h3 data-editable="true" class="text-base font-medium text-ink tracking-wide">長期的な堅牢性</h3>
+                    <p data-editable="true" class="text-sm text-muted leading-relaxed">
+                        成熟した標準技術（HTML / CSS / JavaScript）を土台とし、必要な機能だけを外部基盤と疎結合させることで、経年劣化や保守負担を最小限に抑えます。
+                    </p>
+                </div>
+
+                <div class="py-8 md:pl-8 space-y-4">
+                    <span class="text-xs text-muted tracking-widest">03 — PROTOTYPING</span>
+                    <h3 data-editable="true" class="text-base font-medium text-ink tracking-wide">動く試作品からの対話</h3>
+                    <p data-editable="true" class="text-sm text-muted leading-relaxed">
+                        抽象的な言葉や書類だけで議論するのではなく、初期段階から実際にブラウザで触れるプロトタイプを提示し、具体的な手触りを確かめながら完成度を高めます。
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 02. WORKS -->
+        <section id="works" class="space-y-10 border-t border-line pt-12">
+            <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                <div>
+                    <span class="text-xs tracking-[0.2em] text-muted uppercase block">02 / Selected Works & Gallery</span>
+                    <h2 data-editable="true" class="text-xl font-medium mt-2 tracking-wide">制作実績・ギャラリー枠</h2>
+                </div>
+                <p id="works-guide-text" class="text-xs text-muted">
+                    ※ 試着モードをONにすると、お手持ちの商品・店舗写真を枠内に配置できます
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-12">
+                <!-- Card 01 -->
+                <article class="space-y-4">
+                    <div class="aspect-[16/10] bg-surface border border-line rounded-md overflow-hidden flex items-center justify-center relative img-watermark group">
+                        <img id="preview-img-1" class="w-full h-full object-cover hidden select-none pointer-events-none" alt="Preview 01">
+                        <span id="placeholder-txt-1" class="text-xs tracking-widest text-muted uppercase">
+                            01 / Visual Slot
+                        </span>
+                        <label class="sim-upload-btn hidden absolute bottom-3 right-3 z-20 bg-surface/95 text-ink border border-line text-xs px-3.5 py-2 rounded-md cursor-pointer hover:border-ink shadow-sm transition-colors">
+                            <span>＋ 写真を当てはめる</span>
+                            <input type="file" accept="image/*" class="hidden" onchange="loadUserImage(event, 1)">
+                        </label>
+                    </div>
+                    <div class="flex justify-between items-baseline pt-1">
+                        <div>
+                            <h3 id="sim-work-title-1" data-editable="true" class="text-base font-medium text-ink">
+                                Project / Product Title 01
+                            </h3>
+                            <p data-editable="true" class="text-xs text-muted mt-1">Category / Description text here</p>
+                        </div>
+                        <span class="text-xs text-muted">01</span>
+                    </div>
+                </article>
+
+                <!-- Card 02 -->
+                <article class="space-y-4">
+                    <div class="aspect-[16/10] bg-surface border border-line rounded-md overflow-hidden flex items-center justify-center relative img-watermark group">
+                        <img id="preview-img-2" class="w-full h-full object-cover hidden select-none pointer-events-none" alt="Preview 02">
+                        <span id="placeholder-txt-2" class="text-xs tracking-widest text-muted uppercase">
+                            02 / Visual Slot
+                        </span>
+                        <label class="sim-upload-btn hidden absolute bottom-3 right-3 z-20 bg-surface/95 text-ink border border-line text-xs px-3.5 py-2 rounded-md cursor-pointer hover:border-ink shadow-sm transition-colors">
+                            <span>＋ 写真を当てはめる</span>
+                            <input type="file" accept="image/*" class="hidden" onchange="loadUserImage(event, 2)">
+                        </label>
+                    </div>
+                    <div class="flex justify-between items-baseline pt-1">
+                        <div>
+                            <h3 id="sim-work-title-2" data-editable="true" class="text-base font-medium text-ink">
+                                Project / Product Title 02
+                            </h3>
+                            <p data-editable="true" class="text-xs text-muted mt-1">Category / Description text here</p>
+                        </div>
+                        <span class="text-xs text-muted">02</span>
+                    </div>
+                </article>
+
+                <!-- Card 03 -->
+                <article class="space-y-4">
+                    <div class="aspect-[16/10] bg-surface border border-line rounded-md overflow-hidden flex items-center justify-center relative img-watermark group">
+                        <img id="preview-img-3" class="w-full h-full object-cover hidden select-none pointer-events-none" alt="Preview 03">
+                        <span id="placeholder-txt-3" class="text-xs tracking-widest text-muted uppercase">
+                            03 / Visual Slot
+                        </span>
+                        <label class="sim-upload-btn hidden absolute bottom-3 right-3 z-20 bg-surface/95 text-ink border border-line text-xs px-3.5 py-2 rounded-md cursor-pointer hover:border-ink shadow-sm transition-colors">
+                            <span>＋ 写真を当てはめる</span>
+                            <input type="file" accept="image/*" class="hidden" onchange="loadUserImage(event, 3)">
+                        </label>
+                    </div>
+                    <div class="flex justify-between items-baseline pt-1">
+                        <div>
+                            <h3 data-editable="true" class="text-base font-medium text-ink">
+                                Project / Product Title 03
+                            </h3>
+                            <p data-editable="true" class="text-xs text-muted mt-1">Category / Description text here</p>
+                        </div>
+                        <span class="text-xs text-muted">03</span>
+                    </div>
+                </article>
+
+                <!-- Card 04 -->
+                <article class="space-y-4">
+                    <div class="aspect-[16/10] bg-surface border border-line rounded-md overflow-hidden flex items-center justify-center relative img-watermark group">
+                        <img id="preview-img-4" class="w-full h-full object-cover hidden select-none pointer-events-none" alt="Preview 04">
+                        <span id="placeholder-txt-4" class="text-xs tracking-widest text-muted uppercase">
+                            04 / Visual Slot
+                        </span>
+                        <label class="sim-upload-btn hidden absolute bottom-3 right-3 z-20 bg-surface/95 text-ink border border-line text-xs px-3.5 py-2 rounded-md cursor-pointer hover:border-ink shadow-sm transition-colors">
+                            <span>＋ 写真を当てはめる</span>
+                            <input type="file" accept="image/*" class="hidden" onchange="loadUserImage(event, 4)">
+                        </label>
+                    </div>
+                    <div class="flex justify-between items-baseline pt-1">
+                        <div>
+                            <h3 data-editable="true" class="text-base font-medium text-ink">
+                                Project / Product Title 04
+                            </h3>
+                            <p data-editable="true" class="text-xs text-muted mt-1">Category / Description text here</p>
+                        </div>
+                        <span class="text-xs text-muted">04</span>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <!-- 03. SPECIFICATION -->
+        <section id="spec" class="space-y-10 border-t border-line pt-12">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+                <div class="md:col-span-4">
+                    <span class="text-xs tracking-[0.2em] text-muted uppercase block">03 / Specification</span>
+                    <h2 data-editable="true" class="text-xl font-medium mt-2 tracking-wide">標準仕様と店舗・会社概要</h2>
+                    <p data-editable="true" class="text-xs text-muted mt-3 leading-relaxed">
+                        試着モードでは、右側の表をお客様の店舗情報（営業時間・所在地など）に書き換えてご確認いただけます。
+                    </p>
+                </div>
+
+                <div class="md:col-span-8">
+                    <dl class="divide-y divide-line border-t border-b border-line text-sm">
+                        <div class="py-5 grid grid-cols-1 sm:grid-cols-12 gap-2">
+                            <dt data-editable="true" class="sm:col-span-4 text-muted">屋号・名称</dt>
+                            <dd data-editable="true" class="sm:col-span-8 text-ink">THE STANDARD（クリックして自社の名称に変更可能）</dd>
+                        </div>
+                        <div class="py-5 grid grid-cols-1 sm:grid-cols-12 gap-2">
+                            <dt data-editable="true" class="sm:col-span-4 text-muted">事業内容・コンセプト</dt>
+                            <dd data-editable="true" class="sm:col-span-8 text-ink">Webデザイン設計 / 静的・BaaSハイブリッド構築</dd>
+                        </div>
+                        <div class="py-5 grid grid-cols-1 sm:grid-cols-12 gap-2">
+                            <dt data-editable="true" class="sm:col-span-4 text-muted">所在地・アクセス</dt>
+                            <dd data-editable="true" class="sm:col-span-8 text-ink">京都市（全国オンライン対応）</dd>
+                        </div>
+                        <div class="py-5 grid grid-cols-1 sm:grid-cols-12 gap-2">
+                            <dt data-editable="true" class="sm:col-span-4 text-muted">標準納期・維持費</dt>
+                            <dd data-editable="true" class="sm:col-span-8 text-ink">プロトタイプ確認後 約1〜2週間 / 月額保守費 0円〜</dd>
+                        </div>
+                    </dl>
+                </div>
+            </div>
+        </section>
+
+        <!-- 04. CONTACT -->
+        <section id="contact" class="border-t border-line pt-12">
+            <div class="bg-surface border border-line rounded-md p-8 sm:p-14 flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
+                <div class="space-y-3 max-w-xl">
+                    <span class="text-xs tracking-[0.2em] text-muted uppercase block">04 / Order & Contact</span>
+                    <h2 data-editable="true" class="text-xl sm:text-2xl font-medium text-ink tracking-wide">
+                        試着したイメージでの制作相談・お見積り
+                    </h2>
+                    <p class="text-sm text-muted leading-relaxed">
+                        画面上で書き換えた屋号やキャッチコピー、選択したカラーテーマをそのまま引き継いで制作のご相談メールを作成できます。
+                    </p>
+                </div>
+
+                <div class="shrink-0">
+                    <button type="button" onclick="sendRoleplayOrder()" class="px-8 py-4 bg-ink text-canvas text-xs tracking-[0.15em] uppercase rounded-md hover:opacity-80 transition-opacity">
+                        この試着内容で相談する →
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="max-w-5xl mx-auto px-6 py-12 border-t border-line flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-muted pb-20">
+        <div>&copy; 2026 THE STANDARD. All rights reserved.</div>
+        <div class="tracking-widest uppercase">Built for Longevity</div>
+    </footer>
+
+    <!-- ==========================================================
+         格納式ドロワー：普段は小さな矢印タブのみ、クリックで下から伸びるナチュラルバー
+         ========================================================== -->
+    <div id="sim-drawer-wrapper" class="fixed bottom-0 left-0 w-full z-50 flex flex-col items-center pointer-events-none drawer-closed">
+        
+        <!-- 1. 少しだけ顔を出している引き出しタブ（矢印ボタン） -->
+        <button type="button" onclick="toggleDrawer()" class="pointer-events-auto h-[34px] px-5 bg-panel backdrop-blur-md border border-b-0 border-line rounded-t-md shadow-sm flex items-center gap-2.5 text-xs text-muted hover:text-ink transition-colors">
+            <span id="drawer-arrow" class="text-[10px] transition-transform duration-300">▲</span>
+            <span class="tracking-wider font-medium">試着シミュレーター</span>
+            <span id="drawer-badge" class="w-1.5 h-1.5 rounded-full bg-muted/40"></span>
+        </button>
+
+        <!-- 2. 下から伸びてくるナチュラルカラーの本体バー -->
+        <div class="pointer-events-auto w-full bg-panel backdrop-blur-md border-t border-line shadow-[0_-8px_30px_rgba(0,0,0,0.04)] px-6 py-4">
+            <div class="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-4">
+                
+                <!-- 左：モード切替スイッチ（ナチュラルなトーンに調和） -->
+                <div class="flex items-center gap-3">
+                    <button id="sim-toggle-btn" onclick="toggleSimulator()" class="px-4 py-2 bg-canvas text-ink border border-line text-xs font-medium rounded-md shadow-sm hover:border-ink transition-colors">
+                        ✎ 試着モード：OFF（クリックで編集開始）
+                    </button>
+                    <span id="sim-status-hint" class="hidden sm:inline text-xs text-muted">
+                        ONにすると画面上の文字の打ち替え・写真挿入ができます
+                    </span>
+                </div>
+
+                <!-- 右：トーン＆フォント着せ替え -->
+                <div class="flex flex-wrap items-center gap-2 text-xs">
+                    <span class="text-xs text-muted mr-1">紙色：</span>
+                    <button onclick="setTheme('default')" class="px-3 py-1.5 rounded-md bg-[#fafaf9] text-[#171717] border border-[#d6d6d3] text-xs hover:opacity-80">標準白</button>
+                    <button onclick="setTheme('warm')" class="px-3 py-1.5 rounded-md bg-[#f6f3ec] text-[#26231e] border border-[#d8d0c0] text-xs hover:opacity-80">生成り</button>
+                    <button onclick="setTheme('dark')" class="px-3 py-1.5 rounded-md bg-[#262624] text-[#f4f4f0] border border-[#3a3a38] text-xs hover:opacity-80">墨黒</button>
+                    
+                    <span class="text-line mx-1">|</span>
+                    
+                    <button id="font-toggle-btn" onclick="toggleFontStyle()" class="px-3 py-1.5 rounded-md bg-canvas border border-line text-ink text-xs hover:border-ink transition-colors">
+                        書体：ゴシック
+                    </button>
+
+                    <!-- ドロワーを閉じる最小化ボタン -->
+                    <button onclick="toggleDrawer()" class="ml-2 px-2.5 py-1.5 text-muted hover:text-ink text-xs" title="バーを隠す">
+                        隠す ▼
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==========================================================
+         ロールプレイ＆ドロワー制御スクリプト
+         ========================================================== -->
+    <script>
+        let isDrawerOpen = false;
+        let isSimMode = false;
+        let currentTheme = 'default';
+        let isSerif = false;
+
+        // 1. 下部ドロワーの開閉（矢印タブクリック）
+        function toggleDrawer(forceOpen = null) {
+            const wrapper = document.getElementById('sim-drawer-wrapper');
+            const arrow = document.getElementById('drawer-arrow');
+
+            isDrawerOpen = forceOpen !== null ? forceOpen : !isDrawerOpen;
+
+            if (isDrawerOpen) {
+                wrapper.classList.remove('drawer-closed');
+                wrapper.classList.add('drawer-open');
+                arrow.textContent = '▼';
+            } else {
+                wrapper.classList.remove('drawer-open');
+                wrapper.classList.add('drawer-closed');
+                arrow.textContent = '▲';
+            }
+        }
+
+        // ヒーローセクションのボタンからドロワーを開いて即試着ONにする
+        function openAndActivateSimulator() {
+            toggleDrawer(true);
+            if (!isSimMode) {
+                toggleSimulator();
+            }
+        }
+
+        // 2. 試着（ロールプレイ）モードのON/OFF切り替え
+        function toggleSimulator() {
+            isSimMode = !isSimMode;
+            const body = document.body;
+            const toggleBtn = document.getElementById('sim-toggle-btn');
+            const hint = document.getElementById('sim-status-hint');
+            const badge = document.getElementById('drawer-badge');
+            const watermark = document.getElementById('global-watermark');
+            const editables = document.querySelectorAll('[data-editable="true"]');
+            const uploadBtns = document.querySelectorAll('.sim-upload-btn');
+
+            if (isSimMode) {
+                body.classList.add('sim-active');
+                toggleBtn.textContent = '✓ 試着モード：ON（文字・画像をクリックして編集）';
+                toggleBtn.classList.add('bg-ink', 'text-canvas');
+                toggleBtn.classList.remove('bg-canvas', 'text-ink');
+                hint.textContent = '※ 画面上の点線枠をクリックして直接書き換えられます';
+                badge.classList.replace('bg-muted/40', 'bg-emerald-500');
+                watermark.classList.remove('hidden');
+
+                editables.forEach(el => {
+                    el.setAttribute('contenteditable', 'true');
+                    el.setAttribute('spellcheck', 'false');
+                });
+                uploadBtns.forEach(btn => btn.classList.remove('hidden'));
+            } else {
+                body.classList.remove('sim-active');
+                toggleBtn.textContent = '✎ 試着モード：OFF（クリックで編集開始）';
+                toggleBtn.classList.remove('bg-ink', 'text-canvas');
+                toggleBtn.classList.add('bg-canvas', 'text-ink');
+                hint.textContent = 'ONにすると画面上の文字の打ち替え・写真挿入ができます';
+                badge.classList.replace('bg-emerald-500', 'bg-muted/40');
+                watermark.classList.add('hidden');
+
+                editables.forEach(el => {
+                    el.removeAttribute('contenteditable');
+                });
+                uploadBtns.forEach(btn => btn.classList.add('hidden'));
+            }
+        }
+
+        // 3. ユーザーのローカル画像をブラウザ内だけで安全にプレビュー表示
+        function loadUserImage(event, slotIndex) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imgEl = document.getElementById('preview-img-' + slotIndex);
+                const txtEl = document.getElementById('placeholder-txt-' + slotIndex);
+                imgEl.src = e.target.result;
+                imgEl.classList.remove('hidden');
+                if (txtEl) txtEl.classList.add('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // 4. 背景カラーテーマの着せ替え
+        function setTheme(themeName) {
+            currentTheme = themeName;
+            if (themeName === 'default') {
+                document.documentElement.removeAttribute('data-theme');
+            } else {
+                document.documentElement.setAttribute('data-theme', themeName);
+            }
+        }
+
+        // 5. 書体（ゴシック ⇔ 明朝）の着せ替え
+        function toggleFontStyle() {
+            isSerif = !isSerif;
+            document.body.classList.toggle('font-serif-mode', isSerif);
+            document.getElementById('font-toggle-btn').textContent = isSerif ? '書体：明朝体' : '書体：ゴシック';
+        }
+
+        // 6. 試着した文言・設定を自動取得して発注相談メールを起動
+        function sendRoleplayOrder() {
+            const brand = document.getElementById('sim-brand-name').innerText.trim();
+            const mainCopy = document.getElementById('sim-main-copy').innerText.replace(/\n+/g, ' / ').trim();
+            const lead = document.getElementById('sim-lead-text').innerText.trim();
+            const themeLabel = currentTheme === 'warm' ? '生成り（Warm）' : currentTheme === 'dark' ? '墨黒（Dark）' : '標準白（Standard）';
+            const fontLabel = isSerif ? '明朝体' : 'ゴシック体';
+
+            const subject = encodeURIComponent(`【THE STANDARD】試着シミュレーターからの制作相談（${brand}）`);
+            const body = encodeURIComponent(
+`THE STANDARD 制作相談窓口 行
+
+ブラウザ上の試着シミュレーターにて、以下の構成を作成しました。
+このイメージをベースに制作の相談・見積もりを希望します。
+
+--------------------------------------------------
+■ 試着した屋号・タイトル：
+${brand}
+
+■ 試着したメインコピー：
+${mainCopy}
+
+■ 試着した導入文：
+${lead}
+
+■ 選択したカラー・書体設定：
+・背景トーン：${themeLabel}
+・見出し書体：${fontLabel}
+--------------------------------------------------
+
+【その他ご要望・ご質問】
+（こちらにご記入ください）
+`
+            );
+
+            window.location.href = `mailto:hello@example.com?subject=${subject}&body=${body}`;
+        }
+
+        // 7. 簡易コピーガード（画像枠の右クリック保存抑止）
+        document.addEventListener('contextmenu', function(e) {
+            if (e.target.tagName === 'IMG' || isSimMode) {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>
