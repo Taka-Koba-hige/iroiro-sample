@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="ja" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>re-standard — Web Design & Interactive Simulator</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & Noto Sans JP & Shippori Mincho -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600&family=Shippori+Mincho:wght@500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Inter"', '"Noto Sans JP"', 'sans-serif'],
+                        serif: ['"Shippori Mincho"', 'serif'],
+                    },
+                    colors: {
+                        canvas: 'var(--bg-canvas)',
+                        ink: 'var(--text-ink)',
+                        muted: 'var(--text-muted)',
+                        line: 'var(--border-line)',
+                        surface: 'var(--bg-surface)',
+                        panel: 'var(--bg-panel)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* カラーテーマ変数 */
+        :root {
+            --bg-canvas: #fafaf9;
+            --text-ink: #171717;
+            --text-muted: #737373;
+            --border-line: #e5e5e4;
+            --bg-surface: #f4f4f2;
+            --bg-panel: rgba(244, 244, 242, 0.94);
+        }
+        [data-theme="warm"] {
+            --bg-canvas: #f6f3ec;
+            --text-ink: #26231e;
+            --text-muted: #787267;
+            --border-line: #e2ddd2;
+            --bg-surface: #ede8dd;
+            --bg-panel: rgba(237, 232, 221, 0.95);
+        }
+        [data-theme="dark"] {
+            --bg-canvas: #141413;
+            --text-ink: #f4f4f0;
+            --text-muted: #8e8e8a;
+            --border-line: #2a2a28;
+            --bg-surface: #1e1e1c;
+            --bg-panel: rgba(36, 36, 34, 0.94);
+        }
+
+        body {
+            background-color: var(--bg-canvas);
+            color: var(--text-ink);
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            line-height: 1.8;
+            letter-spacing: 0.02em;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        body.font-serif-mode h1,
+        body.font-serif-mode h2,
+        body.font-serif-mode h3 {
+            font-family: 'Shippori Mincho', serif;
+        }
+
+        /* ==========================================================
+           セキュリティ・コピーガード（試着モードOFF時のみ有効）
+           ========================================================== */
+        body.guard-active {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        body.guard-active img {
+            -webkit-user-drag: none;
+            user-drag: none;
+        }
+
+        /* ==========================================================
+           試着モード（編集可能テキスト＆セクション操作バー）
+           ========================================================== */
+        .sim-active [data-editable="true"] {
+            outline: 1px dashed rgba(115, 115, 115, 0.55);
+            outline-offset: 4px;
+            border-radius: 4px;
+            cursor: text;
+            transition: all 0.15s ease;
+        }
+        .sim-active [data-editable="true"]:hover,
+        .sim-active [data-editable="true"]:focus {
+            outline: 1.5px solid var(--text-ink);
+            background-color: rgba(128, 128, 128, 0.06);
+        }
+
+        /* セクション枠とツールバー（移動ハンドル＆削除ボタン） */
+        .sortable-section {
+            position: relative;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+        .sim-active .sortable-section:hover {
+            outline: 1px dashed rgba(115, 115, 115, 0.35);
+            outline-offset: 12px;
+            border-radius: 6px;
+        }
+
+        .section-controls {
+            display: none;
+            user-select: none;
+        }
+        .sim-active .section-controls {
+            display: inline-flex;
+        }
+
+        .drag-handle {
+            cursor: grab;
+        }
+        .drag-handle:active {
+            cursor: grabbing;
+        }
+
+        /* ドラッグ中の視覚フィードバック */
+        .sortable-section.is-dragging {
+            opacity: 0.35;
+            outline: 2px dashed var(--text-ink) !important;
+            outline-offset: 8px;
+        }
+        .drop-indicator-top {
+            box-shadow: 0 -4px 0 0 #10b981; /* エメラルドの挿入ガイドライン（上） */
+        }
+        .drop-indicator-bottom {
+            box-shadow: 0 4px 0 0 #10b981; /* エメラルドの挿入ガイドライン（下） */
+        }
+
+        /* 盗用防止・斜めリピート透かし */
+        .watermark-pattern {
+            background-image: repeating-linear-gradient(
+                -28deg,
+                transparent,
+                transparent 80px,
+                rgba(128, 128, 128, 0.04) 80px,
+                rgba(128, 128, 128, 0.04) 81px
+            );
+        }
+
+        /* 画像枠専用のコピーライト透かし */
+        .img-watermark::after {
+            content: "SAMPLE PREVIEW — © re-standard";
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            letter-spacing: 0.2em;
+            color: var(--text-ink);
+            opacity: 0.22;
+            transform: rotate(-18deg);
+            pointer-events: none;
+            user-select: none;
+            font-weight: 600;
+        }
+
+        /* ポップアップON時のサムネイルカーソル */
+        body.popup-enabled .work-image-slot {
+            cursor: zoom-in;
+        }
+        body:not(.popup-enabled) .work-image-slot {
+            cursor: default;
+        }
+
+        /* 下から伸びてくるドロワーのスムーズなトランジション */
+        #sim-drawer-wrapper {
+            transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .drawer-closed {
+            transform: translateY(calc(100% - 34px));
+        }
+        .drawer-open {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body class="selection:bg-ink selection:text-canvas guard-active popup-enabled" ondragstart="if(!isSimMode && event.target.tagName==='IMG') return false;">
+
+    <!-- ==========================================================
+         画面全体の透かしオーバーレイ（試着モードON時のみ表示）
+         ========================================================== -->
+    <div id="global-watermark" class="fixed inset-0 z-30 pointer-events-none select-none overflow-hidden hidden opacity-90 watermark-pattern">
+        <div class="w-full h-full flex flex-col justify-around items-center transform -rotate-12 scale-125">
+            <div class="text-xs sm:text-sm tracking-[0.4em] text-muted/25 font-mono whitespace-nowrap">
+                PREVIEW ONLY — © re-standard DESIGN TEMPLATE — DO NOT COPY — PREVIEW ONLY
+            </div>
+            <div class="text-xs sm:text-sm tracking-[0.4em] text-muted/25 font-mono whitespace-nowrap">
+                © re-standard — ROLEPLAY SIMULATOR MODE — PROTECTED LAYOUT — © re-standard
+            </div>
+            <div class="text-xs sm:text-sm tracking-[0.4em] text-muted/25 font-mono whitespace-nowrap">
+                PREVIEW ONLY — © re-standard DESIGN TEMPLATE — DO NOT COPY — PREVIEW ONLY
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================================
+         HEADER
+         ========================================================== -->
+    <header class="fixed top-0 left-0 w-full z-40 bg-canvas/90 backdrop-blur-sm border-b border-line transition-colors">
+        <div class="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
+            <a href="#" id="sim-brand-name" data-editable="true" class="text-sm font-semibold tracking-[0.15em] uppercase text-ink">
+                THE STANDARD
+            </a>
+
+            <nav class="flex items-center gap-6 sm:gap-8 text-xs sm:text-sm text-muted">
+                <a href="#philosophy" class="hover:text-ink transition-colors">Philosophy</a>
+                <a href="#works" class="hover:text-ink transition-colors">Works</a>
+                <a href="#spec" class="hover:text-ink transition-colors">Specification</a>
+                <a href="#contact" class="text-ink font-medium underline underline-offset-4 hover:opacity-70 transition-opacity">
+                    Contact
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- ==========================================================
+         MAIN CONTAINER（セクション並び替え・追加・削除対応コンテナ）
+         ========================================================== -->
+    <main id="sortable-container" class="max-w-5xl mx-auto px-6 pt-32 pb-28 space-y-28">
+
+        <!-- HERO -->
+        <section id="hero" data-section-name="Hero（メインビジュアル）" class="sortable-section space-y-10 pt-4 sm:pt-12">
+            <div class="flex items-center justify-between gap-2">
+                <p id="sim-sub-label" data-editable="true" class="text-xs tracking-[0.2em] text-muted uppercase inline-block">
+                    Web Design & Digital Architecture
+                </p>
+                <!-- セクション操作ツールバー（試着ON時のみ表示） -->
+                <div class="section-controls items-center gap-1.5 z-20">
+                    <div draggable="true" class="drag-handle flex items-center gap-1.5 px-3 py-1 bg-surface border border-line rounded text-[11px] text-ink hover:border-ink shadow-sm transition-colors" title="ここを掴んで上下にドラッグ移動">
+                        <span class="text-sm leading-none">⠿</span>
+                        <span class="font-mono tracking-wider uppercase">Move</span>
+                    </div>
+                    <button type="button" onclick="deleteSection(this)" class="px-2.5 py-1 bg-surface border border-line rounded text-[11px] text-muted hover:text-red-600 hover:border-red-400 shadow-sm transition-colors" title="このセクションを削除">
+                        × 削除
+                    </button>
+                </div>
+            </div>
+
+            <h1 id="sim-main-copy" data-editable="true" class="text-3xl sm:text-5xl font-medium tracking-wide text-ink leading-[1.5] max-w-3xl">
+                かわらず、ずっと。<br>
+                使い続けられる標準をつくる。
+            </h1>
+
+            <p id="sim-lead-text" data-editable="true" class="text-sm sm:text-base text-muted max-w-2xl leading-loose">
+                流行の装飾や過剰なシステムに頼らず、情報の整理と確かな基礎技術だけで構築されたWebサイト。誰にとっても迷いなく使えて、10年後も破綻しない「用の美」を設計の基準としています。
+            </p>
+
+            <div class="pt-4 flex flex-wrap items-center gap-4">
+                <a href="#works" class="inline-flex items-center gap-3 px-7 py-3.5 bg-ink text-canvas text-xs tracking-[0.15em] uppercase rounded-md hover:opacity-80 transition-opacity">
+                    <span>View Archives</span>
+                    <span>↓</span>
+                </a>
+                <button type="button" onclick="openAndActivateSimulator()" class="inline-flex items-center gap-2 px-5 py-3.5 border border-line bg-surface text-ink text-xs tracking-wider rounded-md hover:border-ink transition-colors">
+                    <span>✎ この画面で「試着（並び替え・追加・文字画像編集）」を体験する</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- 01. PHILOSOPHY -->
+        <section id="philosophy" data-section-name="Philosophy（設計の3原則）" class="sortable-section space-y-10 border-t border-line pt-12">
+            <div class="flex items-center justify-between gap-2">
+                <span data-editable="true" class="text-xs tracking-[0.2em] text-muted uppercase block">01 / Philosophy</span>
+                <div class="section-controls items-center gap-1.5 z-20">
+                    <div draggable="true" class="drag-handle flex items-center gap-1.5 px-3 py-1 bg-surface border border-line rounded text-[11px] text-ink hover:border-ink shadow-sm transition-colors" title="ここを掴んで上下にドラッグ移動">
+                        <span class="text-sm leading-none">⠿</span>
+                        <span class="font-mono tracking-wider uppercase">Move</span>
+                    </div>
+                    <button type="button" onclick="deleteSection(this)" class="px-2.5 py-1 bg-surface border border-line rounded text-[11px] text-muted hover:text-red-600 hover:border-red-400 shadow-sm transition-colors" title="このセクションを削除">
+                        × 削除
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                <div class="md:col-span-4">
+                    <h2 data-editable="true" class="text-xl font-medium tracking-wide">設計の3原則</h2>
+                </div>
+                <div data-editable="true" class="md:col-span-8 text-sm sm:text-base text-muted leading-loose">
+                    何かを足すことで個性を出すのではなく、不要な要素を削ぎ落とすことで本来の目的を浮かび上がらせます。
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 border-t border-b border-line divide-y md:divide-y-0 md:divide-x divide-line">
+                <div class="py-8 md:pr-8 space-y-4">
+                    <span class="text-xs text-muted tracking-widest">01 — CLARITY</span>
+                    <h3 data-editable="true" class="text-base font-medium text-ink tracking-wide">明快な構造</h3>
+                    <p data-editable="true" class="text-sm text-muted leading-relaxed">
+                        訪問者が目的の情報へ最短でたどり着けるよう、視線の流れと余白の比率を整理し、説明のいらない画面を設計します。
+                    </p>
+                </div>
+
+                <div class="py-8 md:px-8 space-y-4">
+                    <span class="text-xs text-muted tracking-widest">02 — DURABILITY</span>
+                    <h3 data-editable="true" class="text-base font-medium text-ink tracking-wide">長期的な堅牢性</h3>
+                    <p data-editable="true" class="text-sm text-muted leading-relaxed">
+                        成熟した標準技術（HTML / CSS / JavaScript）を土台とし、必要な機能だけを外部基盤と疎結合させることで、経年劣化や保守負担を最小限に抑えます。
+                    </p>
+                </div>
+
+                <div class="py-8 md:pl-8 space-y-4">
+                    <span class="text-xs text-muted tracking-widest">03 — PROTOTYPING</span>
+                    <h3 data-editable="true" class="text-base font-medium text-ink tracking-wide">動く試作品からの対話</h3>
+                    <p data-editable="true" class="text-sm text-muted leading-relaxed">
+                        抽象的な言葉や書類だけで議論するのではなく、初期段階から実際にブラウザで触れるプロトタイプを提示し、具体的な手触りを確かめながら完成度を高めます。
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 02. WORKS -->
+        <section id="works" data-section-name="Works（制作実績・ギャラリー）" class="sortable-section space-y-10 border-t border-line pt-12">
+            <div class="flex items-center justify-between gap-2">
+                <span data-editable="true" class="text-xs tracking-[0.2em] text-muted uppercase block">02 / Selected Works & Gallery</span>
+                <div class="section-controls items-center gap-1.5 z-20">
+                    <div draggable="true" class="drag-handle flex items-center gap-1.5 px-3 py-1 bg-surface border border-line rounded text-[11px] text-ink hover:border-ink shadow-sm transition-colors" title="ここを掴んで上下にドラッグ移動">
+                        <span class="text-sm leading-none">⠿</span>
+                        <span class="font-mono tracking-wider uppercase">Move</span>
+                    </div>
+                    <button type="button" onclick="deleteSection(this)" class="px-2.5 py-1 bg-surface border border-line rounded text-[11px] text-muted hover:text-red-600 hover:border-red-400 shadow-sm transition-colors" title="このセクションを削除">
+                        × 削除
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                <div>
+                    <h2 data-editable="true" class="text-xl font-medium tracking-wide">制作実績・ギャラリー枠</h2>
+                </div>
+                <p id="works-guide-text" class="text-xs text-muted">
+                    ※ サムネイルをクリックすると拡大表示されます（下部バーでON/OFF切替可能）
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-12">
+                <!-- Card 01 -->
+                <article class="space-y-4">
+                    <div onclick="handleThumbnailClick(1)" class="work-image-slot aspect-[16/10] bg-surface border border-line rounded-md overflow-hidden flex items-center justify-center relative img-watermark group">
+                        <img id="preview-img-1" class="w-full h-full object-cover hidden select-none pointer-events-none transition-transform duration-300 group-hover:scale-[1.02]" alt="Preview 01">
+                        <span id="placeholder-txt-1" class="text-xs tracking-widest text-muted uppercase">
+                            01 / Visual Slot (Click to Zoom)
+                        </span>
+                        <label onclick="event.stopPropagation()" class="sim-upload-btn hidden absolute bottom-3 right-3 z-20 bg-surface/95 text-ink border border-line text-xs px-3.5 py-2 rounded-md cursor-pointer hover:border-ink shadow-sm transition-colors">
+                            <span>＋ 写真を当てはめる</span>
+                            <input type="file" accept="image/*" class="hidden" onchange="loadUserImage(event, 1)">
+                        </label>
+                    </div>
+                    <div class="flex justify-between items-baseline pt-1">
+                        <div>
+                            <h3 id="sim-work-title-1" data-editable="true" class="text-base font-medium text-ink">
+                                Project / Product Title 01
+                            </h3>
+                            <p id="sim-work-desc-1" data-editable="true" class="text-xs text-muted mt-1">Category / Description text here</p>
+                        </div>
+                        <span class="text-xs text-muted">01</span>
+                    </div>
+                </article>
+
+                <!-- Card 02 -->
+                <article class="space-y-4">
+                    <div onclick="handleThumbnailClick(2)" class="work-image-slot aspect-[16/10] bg-surface border border-line rounded-md overflow-hidden flex items-center justify-center relative img-watermark group">
+                        <img id="preview-img-2" class="w-full h-full object-cover hidden select-none pointer-events-none transition-transform duration-300 group-hover:scale-[1.02]" alt="Preview 02">
+                        <span id="placeholder-txt-2" class="text-xs tracking-widest text-muted uppercase">
+                            02 / Visual Slot (Click to Zoom)
+                        </span>
+                        <label onclick="event.stopPropagation()" class="sim-upload-btn hidden absolute bottom-3 right-3 z-20 bg-surface/95 text-ink border border-line text-xs px-3.5 py-2 rounded-md cursor-pointer hover:border-ink shadow-sm transition-colors">
+                            <span>＋ 写真を当てはめる</span>
+                            <input type="file" accept="image/*" class="hidden" onchange="loadUserImage(event, 2)">
+                        </label>
+                    </div>
+                    <div class="flex justify-between items-baseline pt-1">
+                        <div>
+                            <h3 id="sim-work-title-2" data-editable="true" class="text-base font-medium text-ink">
+                                Project / Product Title 02
+                            </h3>
+                            <p id="sim-work-desc-2" data-editable="true" class="text-xs text-muted mt-1">Category / Description text here</p>
+                        </div>
+                        <span class="text-xs text-muted">02</span>
+                    </div>
+                </article>
+
+                <!-- Card 03 -->
+                <article class="space-y-4">
+                    <div onclick="handleThumbnailClick(3)" class="work-image-slot aspect-[16/10] bg-surface border border-line rounded-md overflow-hidden flex items-center justify-center relative img-watermark group">
+                        <img id="preview-img-3" class="w-full h-full object-cover hidden select-none pointer-events-none transition-transform duration-300 group-hover:scale-[1.02]" alt="Preview 03">
+                        <span id="placeholder-txt-3" class="text-xs tracking-widest text-muted uppercase">
+                            03 / Visual Slot (Click to Zoom)
+                        </span>
+                        <label onclick="event.stopPropagation()" class="sim-upload-btn hidden absolute bottom-3 right-3 z-20 bg-surface/95 text-ink border border-line text-xs px-3.5 py-2 rounded-md cursor-pointer hover:border-ink shadow-sm transition-colors">
+                            <span>＋ 写真を当てはめる</span>
+                            <input type="file" accept="image/*" class="hidden" onchange="loadUserImage(event, 3)">
+                        </label>
+                    </div>
+                    <div class="flex justify-between items-baseline pt-1">
+                        <div>
+                            <h3 id="sim-work-title-3" data-editable="true" class="text-base font-medium text-ink">
+                                Project / Product Title 03
+                            </h3>
+                            <p id="sim-work-desc-3" data-editable="true" class="text-xs text-muted mt-1">Category / Description text here</p>
+                        </div>
+                        <span class="text-xs text-muted">03</span>
+                    </div>
+                </article>
+
+                <!-- Card 04 -->
+                <article class="space-y-4">
+                    <div onclick="handleThumbnailClick(4)" class="work-image-slot aspect-[16/10] bg-surface border border-line rounded-md overflow-hidden flex items-center justify-center relative img-watermark group">
+                        <img id="preview-img-4" class="w-full h-full object-cover hidden select-none pointer-events-none transition-transform duration-300 group-hover:scale-[1.02]" alt="Preview 04">
+                        <span id="placeholder-txt-4" class="text-xs tracking-widest text-muted uppercase">
+                            04 / Visual Slot (Click to Zoom)
+                        </span>
+                        <label onclick="event.stopPropagation()" class="sim-upload-btn hidden absolute bottom-3 right-3 z-20 bg-surface/95 text-ink border border-line text-xs px-3.5 py-2 rounded-md cursor-pointer hover:border-ink shadow-sm transition-colors">
+                            <span>＋ 写真を当てはめる</span>
+                            <input type="file" accept="image/*" class="hidden" onchange="loadUserImage(event, 4)">
+                        </label>
+                    </div>
+                    <div class="flex justify-between items-baseline pt-1">
+                        <div>
+                            <h3 id="sim-work-title-4" data-editable="true" class="text-base font-medium text-ink">
+                                Project / Product Title 04
+                            </h3>
+                            <p id="sim-work-desc-4" data-editable="true" class="text-xs text-muted mt-1">Category / Description text here</p>
+                        </div>
+                        <span class="text-xs text-muted">04</span>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <!-- 03. SPECIFICATION -->
+        <section id="spec" data-section-name="Specification（標準仕様・概要）" class="sortable-section space-y-10 border-t border-line pt-12">
+            <div class="flex items-center justify-between gap-2">
+                <span data-editable="true" class="text-xs tracking-[0.2em] text-muted uppercase block">03 / Specification</span>
+                <div class="section-controls items-center gap-1.5 z-20">
+                    <div draggable="true" class="drag-handle flex items-center gap-1.5 px-3 py-1 bg-surface border border-line rounded text-[11px] text-ink hover:border-ink shadow-sm transition-colors" title="ここを掴んで上下にドラッグ移動">
+                        <span class="text-sm leading-none">⠿</span>
+                        <span class="font-mono tracking-wider uppercase">Move</span>
+                    </div>
+                    <button type="button" onclick="deleteSection(this)" class="px-2.5 py-1 bg-surface border border-line rounded text-[11px] text-muted hover:text-red-600 hover:border-red-400 shadow-sm transition-colors" title="このセクションを削除">
+                        × 削除
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+                <div class="md:col-span-4">
+                    <h2 data-editable="true" class="text-xl font-medium tracking-wide">標準仕様と店舗・会社概要</h2>
+                    <p data-editable="true" class="text-xs text-muted mt-3 leading-relaxed">
+                        試着モードでは、右側の表をお客様の店舗情報（営業時間・所在地など）に書き換えてご確認いただけます。
+                    </p>
+                </div>
+
+                <div class="md:col-span-8">
+                    <dl class="divide-y divide-line border-t border-b border-line text-sm">
+                        <div class="py-5 grid grid-cols-1 sm:grid-cols-12 gap-2">
+                            <dt data-editable="true" class="sm:col-span-4 text-muted">屋号・名称</dt>
+                            <dd data-editable="true" class="sm:col-span-8 text-ink">THE STANDARD（クリックして自社の名称に変更可能）</dd>
+                        </div>
+                        <div class="py-5 grid grid-cols-1 sm:grid-cols-12 gap-2">
+                            <dt data-editable="true" class="sm:col-span-4 text-muted">事業内容・コンセプト</dt>
+                            <dd data-editable="true" class="sm:col-span-8 text-ink">Webデザイン設計 / 静的・BaaSハイブリッド構築</dd>
+                        </div>
+                        <div class="py-5 grid grid-cols-1 sm:grid-cols-12 gap-2">
+                            <dt data-editable="true" class="sm:col-span-4 text-muted">所在地・アクセス</dt>
+                            <dd data-editable="true" class="sm:col-span-8 text-ink">京都市（全国オンライン対応）</dd>
+                        </div>
+                        <div class="py-5 grid grid-cols-1 sm:grid-cols-12 gap-2">
+                            <dt data-editable="true" class="sm:col-span-4 text-muted">標準納期・維持費</dt>
+                            <dd data-editable="true" class="sm:col-span-8 text-ink">プロトタイプ確認後 約1〜2週間 / 月額保守費 0円〜</dd>
+                        </div>
+                    </dl>
+                </div>
+            </div>
+        </section>
+
+        <!-- 04. CONTACT -->
+        <section id="contact" data-section-name="Contact（お問い合わせ）" class="sortable-section border-t border-line pt-12">
+            <div class="flex items-center justify-between gap-2 mb-6">
+                <span data-editable="true" class="text-xs tracking-[0.2em] text-muted uppercase block">04 / Order & Contact</span>
+                <div class="section-controls items-center gap-1.5 z-20">
+                    <div draggable="true" class="drag-handle flex items-center gap-1.5 px-3 py-1 bg-surface border border-line rounded text-[11px] text-ink hover:border-ink shadow-sm transition-colors" title="ここを掴んで上下にドラッグ移動">
+                        <span class="text-sm leading-none">⠿</span>
+                        <span class="font-mono tracking-wider uppercase">Move</span>
+                    </div>
+                    <button type="button" onclick="deleteSection(this)" class="px-2.5 py-1 bg-surface border border-line rounded text-[11px] text-muted hover:text-red-600 hover:border-red-400 shadow-sm transition-colors" title="このセクションを削除">
+                        × 削除
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-surface border border-line rounded-md p-8 sm:p-14 flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
+                <div class="space-y-3 max-w-xl">
+                    <h2 data-editable="true" class="text-xl sm:text-2xl font-medium text-ink tracking-wide">
+                        試着したイメージでの制作相談・お見積り
+                    </h2>
+                    <p class="text-sm text-muted leading-relaxed">
+                        画面上で書き換えた屋号やキャッチコピー、並び替えたセクション構成、選択したカラーテーマをそのまま引き継いで制作のご相談メールを作成できます。
+                    </p>
+                </div>
+
+                <div class="shrink-0">
+                    <button type="button" onclick="sendRoleplayOrder()" class="px-8 py-4 bg-ink text-canvas text-xs tracking-[0.15em] uppercase rounded-md hover:opacity-80 transition-opacity">
+                        この試着内容で相談する →
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="max-w-5xl mx-auto px-6 py-12 border-t border-line flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-muted pb-28">
+        <div>&copy; 2026 THE STANDARD / re-standard. All rights reserved.</div>
+        <div class="tracking-widest uppercase">Built for Longevity</div>
+    </footer>
+
+    <!-- ==========================================================
+         全画面ライトボックス（拡大ポップアップモーダル）
+         ========================================================== -->
+    <div id="lightbox-modal" onclick="closeLightbox()" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-6 cursor-zoom-out">
+        <div onclick="event.stopPropagation()" class="relative w-full max-w-4xl bg-canvas border border-line rounded-md overflow-hidden shadow-2xl cursor-default">
+            <div class="flex items-center justify-between px-5 py-3.5 border-b border-line bg-surface">
+                <div class="flex items-center gap-3">
+                    <span id="lightbox-title" class="text-xs font-medium tracking-wider text-ink">Project Title</span>
+                    <span id="lightbox-desc" class="text-xs text-muted hidden sm:inline"></span>
+                </div>
+                <button type="button" onclick="closeLightbox()" class="text-xs tracking-widest text-muted hover:text-ink px-2 py-1">
+                    CLOSE [✕]
+                </button>
+            </div>
+            <div class="aspect-[16/10] w-full bg-surface flex items-center justify-center relative overflow-hidden img-watermark">
+                <img id="lightbox-img" class="w-full h-full object-contain hidden select-none pointer-events-none" alt="Enlarged Preview">
+                <div id="lightbox-placeholder" class="text-xs tracking-[0.25em] text-muted uppercase">
+                    Visual Slot Preview (No Image Uploaded Yet)
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================================
+         格納式ドロワー：下から伸びるシミュレーター＆セクション追加バー
+         ========================================================== -->
+    <div id="sim-drawer-wrapper" class="fixed bottom-0 left-0 w-full z-50 flex flex-col items-center pointer-events-none drawer-closed">
+        
+        <!-- 1. 引き出しタブ -->
+        <button type="button" onclick="toggleDrawer()" class="pointer-events-auto h-[34px] px-5 bg-panel backdrop-blur-md border border-b-0 border-line rounded-t-md shadow-sm flex items-center gap-2.5 text-xs text-muted hover:text-ink transition-colors">
+            <span id="drawer-arrow" class="text-[10px] transition-transform duration-300">▲</span>
+            <span class="tracking-wider font-medium">試着シミュレーター</span>
+            <span id="drawer-badge" class="w-1.5 h-1.5 rounded-full bg-muted/40"></span>
+        </button>
+
+        <!-- 2. 本体バー -->
+        <div class="pointer-events-auto w-full bg-panel backdrop-blur-md border-t border-line shadow-[0_-8px_30px_rgba(0,0,0,0.06)] px-6 py-4">
+            <div class="max-w-5xl mx-auto flex flex-col gap-3">
+                
+                <!-- 上段：試着モード切替 ＆ セクション追加ボタン -->
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button id="sim-toggle-btn" onclick="toggleSimulator()" class="px-4 py-2 bg-canvas text-ink border border-line text-xs font-medium rounded-md shadow-sm hover:border-ink transition-colors">
+                            ✎ 試着モード：OFF（クリックで編集開始）
+                        </button>
+
+                        <!-- セクション追加ボタン群 -->
+                        <div class="flex items-center gap-1.5 pl-1">
+                            <button type="button" onclick="addFreeTextSection()" class="px-3 py-2 bg-canvas text-ink border border-line text-xs rounded-md hover:border-ink transition-colors" title="自由な見出しとテキストの枠を追加します">
+                                ＋ フリーテキスト枠を追加
+                            </button>
+                            <button type="button" onclick="addGallerySection()" class="px-3 py-2 bg-canvas text-ink border border-line text-xs rounded-md hover:border-ink transition-colors" title="2列の写真ギャラリー枠を追加します">
+                                ＋ ギャラリー枠を追加
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 右：トーン＆フォント＆ポップアップ着せ替え -->
+                    <div class="flex flex-wrap items-center gap-1.5 text-xs">
+                        <span class="text-xs text-muted mr-0.5">紙色：</span>
+                        <button onclick="setTheme('default')" class="px-2.5 py-1.5 rounded-md bg-[#fafaf9] text-[#171717] border border-[#d6d6d3] text-xs hover:opacity-80">標準白</button>
+                        <button onclick="setTheme('warm')" class="px-2.5 py-1.5 rounded-md bg-[#f6f3ec] text-[#26231e] border border-[#d8d0c0] text-xs hover:opacity-80">生成り</button>
+                        <button onclick="setTheme('dark')" class="px-2.5 py-1.5 rounded-md bg-[#262624] text-[#f4f4f0] border border-[#3a3a38] text-xs hover:opacity-80">墨黒</button>
+                        
+                        <span class="text-line mx-0.5">|</span>
+                        
+                        <button id="font-toggle-btn" onclick="toggleFontStyle()" class="px-2.5 py-1.5 rounded-md bg-canvas border border-line text-ink text-xs hover:border-ink transition-colors">
+                            書体：ゴシック
+                        </button>
+
+                        <button id="popup-toggle-btn" onclick="togglePopupMode()" class="px-2.5 py-1.5 rounded-md bg-ink text-canvas border border-ink text-xs hover:opacity-90 transition-colors">
+                            拡大ポップアップ：ON
+                        </button>
+
+                        <button onclick="toggleDrawer()" class="ml-1 px-2 py-1.5 text-muted hover:text-ink text-xs" title="バーを隠す">
+                            隠す ▼
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==========================================================
+         統合制御スクリプト
+         ========================================================== -->
+    <script>
+        let isDrawerOpen = false;
+        let isSimMode = false;
+        let isPopupEnabled = true;
+        let currentTheme = 'default';
+        let isSerif = false;
+        let slotCounter = 4; // ギャラリー画像スロットの連番管理
+        let customSectionCounter = 1; // 追加セクションの連番管理
+
+        // 1. 下部ドロワーの開閉
+        function toggleDrawer(forceOpen = null) {
+            const wrapper = document.getElementById('sim-drawer-wrapper');
+            const arrow = document.getElementById('drawer-arrow');
+            isDrawerOpen = forceOpen !== null ? forceOpen : !isDrawerOpen;
+
+            if (isDrawerOpen) {
+                wrapper.classList.remove('drawer-closed');
+                wrapper.classList.add('drawer-open');
+                arrow.textContent = '▼';
+            } else {
+                wrapper.classList.remove('drawer-open');
+                wrapper.classList.add('drawer-closed');
+                arrow.textContent = '▲';
+            }
+        }
+
+        function openAndActivateSimulator() {
+            toggleDrawer(true);
+            if (!isSimMode) {
+                toggleSimulator();
+            }
+        }
+
+        // 編集可能属性とアップロードボタンの表示状態を最新化する関数
+        function refreshEditableState() {
+            const editables = document.querySelectorAll('[data-editable="true"]');
+            const uploadBtns = document.querySelectorAll('.sim-upload-btn');
+
+            if (isSimMode) {
+                editables.forEach(el => {
+                    el.setAttribute('contenteditable', 'true');
+                    el.setAttribute('spellcheck', 'false');
+                });
+                uploadBtns.forEach(btn => btn.classList.remove('hidden'));
+            } else {
+                editables.forEach(el => {
+                    el.removeAttribute('contenteditable');
+                });
+                uploadBtns.forEach(btn => btn.classList.add('hidden'));
+            }
+        }
+
+        // 2. 試着モードのON/OFF切り替え（セキュリティガード反転連動）
+        function toggleSimulator() {
+            isSimMode = !isSimMode;
+            const body = document.body;
+            const toggleBtn = document.getElementById('sim-toggle-btn');
+            const badge = document.getElementById('drawer-badge');
+            const watermark = document.getElementById('global-watermark');
+
+            if (isSimMode) {
+                body.classList.add('sim-active');
+                body.classList.remove('guard-active');
+                toggleBtn.textContent = '✓ 試着モード：ON（文字・画像・⠿移動・削除が可能）';
+                toggleBtn.classList.add('bg-ink', 'text-canvas');
+                toggleBtn.classList.remove('bg-canvas', 'text-ink');
+                badge.classList.replace('bg-muted/40', 'bg-emerald-500');
+                watermark.classList.remove('hidden');
+            } else {
+                body.classList.remove('sim-active');
+                body.classList.add('guard-active');
+                toggleBtn.textContent = '✎ 試着モード：OFF（クリックで編集開始）';
+                toggleBtn.classList.remove('bg-ink', 'text-canvas');
+                toggleBtn.classList.add('bg-canvas', 'text-ink');
+                badge.classList.replace('bg-emerald-500', 'bg-muted/40');
+                watermark.classList.add('hidden');
+            }
+            refreshEditableState();
+        }
+
+        // ==========================================================
+        // 3. 確実に入れ替わる「ハンドル直接ドラッグ方式」＆自動スクロール
+        // ==========================================================
+        const container = document.getElementById('sortable-container');
+        let draggedSection = null;
+
+        // イベント委譲で動的に追加されたセクションのハンドルにも完全対応
+        container.addEventListener('dragstart', function(e) {
+            const handle = e.target.closest('.drag-handle');
+            if (!isSimMode || !handle) {
+                e.preventDefault();
+                return;
+            }
+            draggedSection = handle.closest('.sortable-section');
+            if (!draggedSection) return;
+
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', draggedSection.id || 'section');
+
+            // ドラッグ中のゴースト画像にセクション全体を設定（見やすさ向上）
+            try {
+                e.dataTransfer.setDragImage(draggedSection, 40, 20);
+            } catch (err) {}
+
+            setTimeout(() => {
+                if (draggedSection) draggedSection.classList.add('is-dragging');
+            }, 0);
+        });
+
+        container.addEventListener('dragover', function(e) {
+            if (!isSimMode || !draggedSection) return;
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+
+            // 画面の上端・下端に近づいたら自動スクロールさせる
+            const scrollZone = 90;
+            if (e.clientY < scrollZone) {
+                window.scrollBy(0, -14);
+            } else if (window.innerHeight - e.clientY < scrollZone) {
+                window.scrollBy(0, 14);
+            }
+
+            const targetSection = e.target.closest('.sortable-section');
+            clearDropIndicators();
+
+            if (!targetSection || targetSection === draggedSection) return;
+
+            const rect = targetSection.getBoundingClientRect();
+            const midpoint = rect.top + rect.height / 2;
+
+            if (e.clientY < midpoint) {
+                targetSection.classList.add('drop-indicator-top');
+                container.insertBefore(draggedSection, targetSection);
+            } else {
+                targetSection.classList.add('drop-indicator-bottom');
+                container.insertBefore(draggedSection, targetSection.nextSibling);
+            }
+        });
+
+        container.addEventListener('drop', function(e) {
+            if (!isSimMode || !draggedSection) return;
+            e.preventDefault();
+            clearDropIndicators();
+        });
+
+        container.addEventListener('dragend', function() {
+            clearDropIndicators();
+            if (draggedSection) {
+                draggedSection.classList.remove('is-dragging');
+                draggedSection = null;
+            }
+        });
+
+        function clearDropIndicators() {
+            document.querySelectorAll('.sortable-section').forEach(sec => {
+                sec.classList.remove('drop-indicator-top', 'drop-indicator-bottom');
+            });
+        }
+
+        // ==========================================================
+        // 4. セクションの削除 ＆ 新規追加（フリーテキスト枠 / ギャラリー枠）
+        // ==========================================================
+        function deleteSection(btnEl) {
+            if (!isSimMode) return;
+            const section = btnEl.closest('.sortable-section');
+            if (!section) return;
+
+            const remaining = document.querySelectorAll('#sortable-container .sortable-section').length;
+            if (remaining <= 1) {
+                alert('これ以上セクションを削除できません。');
+                return;
+            }
+            section.remove();
+        }
+
+        // 新規セクションをContactの直前（なければ末尾）に挿入してスクロールするヘルパー
+        function insertNewSection(sectionEl) {
+            if (!isSimMode) {
+                toggleSimulator();
+            }
+            const contactSec = document.getElementById('contact');
+            if (contactSec && contactSec.parentNode === container) {
+                container.insertBefore(sectionEl, contactSec);
+            } else {
+                container.appendChild(sectionEl);
+            }
+            refreshEditableState();
+            sectionEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // ＋ フリーテキスト枠を追加
+        function addFreeTextSection() {
+            const num = String(customSectionCounter++).padStart(2, '0');
+            const sec = document.createElement('section');
+            sec.id = 'custom-text-' + Date.now();
+            sec.setAttribute('data-section-name', `Free Text #${num}（追加フリーテキスト枠）`);
+            sec.className = 'sortable-section space-y-8 border-t border-line pt-12';
+            sec.innerHTML = `
+                <div class="flex items-center justify-between gap-2">
+                    <span data-editable="true" class="text-xs tracking-[0.2em] text-muted uppercase block">EXTRA / Free Text Block ${num}</span>
+                    <div class="section-controls items-center gap-1.5 z-20">
+                        <div draggable="true" class="drag-handle flex items-center gap-1.5 px-3 py-1 bg-surface border border-line rounded text-[11px] text-ink hover:border-ink shadow-sm transition-colors" title="ここを掴んで上下にドラッグ移動">
+                            <span class="text-sm leading-none">⠿</span>
+                            <span class="font-mono tracking-wider uppercase">Move</span>
+                        </div>
+                        <button type="button" onclick="deleteSection(this)" class="px-2.5 py-1 bg-surface border border-line rounded text-[11px] text-muted hover:text-red-600 hover:border-red-400 shadow-sm transition-colors" title="このセクションを削除">
+                            × 削除
+                        </button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                    <div class="md:col-span-4">
+                        <h2 data-editable="true" class="text-xl font-medium tracking-wide">新しい見出しタイトル</h2>
+                    </div>
+                    <div data-editable="true" class="md:col-span-8 text-sm sm:text-base text-muted leading-loose">
+                        ここは新しく追加されたフリーテキストセクションです。クリックして、お店のこだわりやサービス内容、メッセージなどを自由に書き換えることができます。右上の「⠿ Move」を掴めば好きな位置へ移動できます。
+                    </div>
+                </div>
+            `;
+            insertNewSection(sec);
+        }
+
+        // ＋ ギャラリー枠を追加
+        function addGallerySection() {
+            const num = String(customSectionCounter++).padStart(2, '0');
+            const slotA = ++slotCounter;
+            const slotB = ++slotCounter;
+
+            const sec = document.createElement('section');
+            sec.id = 'custom-gallery-' + Date.now();
+            sec.setAttribute('data-section-name', `Gallery #${num}（追加ギャラリー枠）`);
+            sec.className = 'sortable-section space-y-10 border-t border-line pt-12';
+            sec.innerHTML = `
+                <div class="flex items-center justify-between gap-2">
+                    <span data-editable="true" class="text-xs tracking-[0.2em] text-muted uppercase block">EXTRA / Additional Gallery ${num}</span>
+                    <div class="section-controls items-center gap-1.5 z-20">
+                        <div draggable="true" class="drag-handle flex items-center gap-1.5 px-3 py-1 bg-surface border border-line rounded text-[11px] text-ink hover:border-ink shadow-sm transition-colors" title="ここを掴んで上下にドラッグ移動">
+                            <span class="text-sm leading-none">⠿</span>
+                            <span class="font-mono tracking-wider uppercase">Move</span>
+                        </div>
+                        <button type="button" onclick="deleteSection(this)" class="px-2.5 py-1 bg-surface border border-line rounded text-[11px] text-muted hover:text-red-600 hover:border-red-400 shadow-sm transition-colors" title="このセクションを削除">
+                            × 削除
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <h2 data-editable="true" class="text-xl font-medium tracking-wide">追加ギャラリー・商品紹介</h2>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-12">
+                    <article class="space-y-4">
+                        <div onclick="handleThumbnailClick(${slotA})" class="work-image-slot aspect-[16/10] bg-surface border border-line rounded-md overflow-hidden flex items-center justify-center relative img-watermark group">
+                            <img id="preview-img-${slotA}" class="w-full h-full object-cover hidden select-none pointer-events-none transition-transform duration-300 group-hover:scale-[1.02]" alt="Preview ${slotA}">
+                            <span id="placeholder-txt-${slotA}" class="text-xs tracking-widest text-muted uppercase">
+                                0${slotA} / Visual Slot (Click to Zoom)
+                            </span>
+                            <label onclick="event.stopPropagation()" class="sim-upload-btn hidden absolute bottom-3 right-3 z-20 bg-surface/95 text-ink border border-line text-xs px-3.5 py-2 rounded-md cursor-pointer hover:border-ink shadow-sm transition-colors">
+                                <span>＋ 写真を当てはめる</span>
+                                <input type="file" accept="image/*" class="hidden" onchange="loadUserImage(event, ${slotA})">
+                            </label>
+                        </div>
+                        <div class="flex justify-between items-baseline pt-1">
+                            <div>
+                                <h3 id="sim-work-title-${slotA}" data-editable="true" class="text-base font-medium text-ink">
+                                    New Visual Title 0${slotA}
+                                </h3>
+                                <p id="sim-work-desc-${slotA}" data-editable="true" class="text-xs text-muted mt-1">Category / Description text here</p>
+                            </div>
+                            <span class="text-xs text-muted">0${slotA}</span>
+                        </div>
+                    </article>
+
+                    <article class="space-y-4">
+                        <div onclick="handleThumbnailClick(${slotB})" class="work-image-slot aspect-[16/10] bg-surface border border-line rounded-md overflow-hidden flex items-center justify-center relative img-watermark group">
+                            <img id="preview-img-${slotB}" class="w-full h-full object-cover hidden select-none pointer-events-none transition-transform duration-300 group-hover:scale-[1.02]" alt="Preview ${slotB}">
+                            <span id="placeholder-txt-${slotB}" class="text-xs tracking-widest text-muted uppercase">
+                                0${slotB} / Visual Slot (Click to Zoom)
+                            </span>
+                            <label onclick="event.stopPropagation()" class="sim-upload-btn hidden absolute bottom-3 right-3 z-20 bg-surface/95 text-ink border border-line text-xs px-3.5 py-2 rounded-md cursor-pointer hover:border-ink shadow-sm transition-colors">
+                                <span>＋ 写真を当てはめる</span>
+                                <input type="file" accept="image/*" class="hidden" onchange="loadUserImage(event, ${slotB})">
+                            </label>
+                        </div>
+                        <div class="flex justify-between items-baseline pt-1">
+                            <div>
+                                <h3 id="sim-work-title-${slotB}" data-editable="true" class="text-base font-medium text-ink">
+                                    New Visual Title 0${slotB}
+                                </h3>
+                                <p id="sim-work-desc-${slotB}" data-editable="true" class="text-xs text-muted mt-1">Category / Description text here</p>
+                            </div>
+                            <span class="text-xs text-muted">0${slotB}</span>
+                        </div>
+                    </article>
+                </div>
+            `;
+            insertNewSection(sec);
+        }
+
+        // ==========================================================
+        // 5. サムネイル拡大ポップアップ（ON / OFF 切り替え＆モーダル表示）
+        // ==========================================================
+        function togglePopupMode() {
+            isPopupEnabled = !isPopupEnabled;
+            const btn = document.getElementById('popup-toggle-btn');
+            document.body.classList.toggle('popup-enabled', isPopupEnabled);
+
+            if (isPopupEnabled) {
+                btn.textContent = '拡大ポップアップ：ON';
+                btn.classList.add('bg-ink', 'text-canvas', 'border-ink');
+                btn.classList.remove('bg-canvas', 'text-muted', 'border-line');
+            } else {
+                btn.textContent = '拡大ポップアップ：OFF';
+                btn.classList.remove('bg-ink', 'text-canvas', 'border-ink');
+                btn.classList.add('bg-canvas', 'text-muted', 'border-line');
+            }
+        }
+
+        function handleThumbnailClick(slotIndex) {
+            if (!isPopupEnabled) return;
+
+            const previewImg = document.getElementById('preview-img-' + slotIndex);
+            const titleEl = document.getElementById('sim-work-title-' + slotIndex);
+            const descEl = document.getElementById('sim-work-desc-' + slotIndex);
+
+            const modal = document.getElementById('lightbox-modal');
+            const lightboxImg = document.getElementById('lightbox-img');
+            const lightboxPlaceholder = document.getElementById('lightbox-placeholder');
+            const lightboxTitle = document.getElementById('lightbox-title');
+            const lightboxDesc = document.getElementById('lightbox-desc');
+
+            lightboxTitle.textContent = titleEl ? titleEl.innerText.trim() : `Work 0${slotIndex}`;
+            lightboxDesc.textContent = descEl ? `— ${descEl.innerText.trim()}` : '';
+
+            if (previewImg && previewImg.src && !previewImg.classList.contains('hidden')) {
+                lightboxImg.src = previewImg.src;
+                lightboxImg.classList.remove('hidden');
+                lightboxPlaceholder.classList.add('hidden');
+            } else {
+                lightboxImg.src = '';
+                lightboxImg.classList.add('hidden');
+                lightboxPlaceholder.textContent = `0${slotIndex} / Visual Slot — Enlarged Preview`;
+                lightboxPlaceholder.classList.remove('hidden');
+            }
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeLightbox() {
+            const modal = document.getElementById('lightbox-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeLightbox();
+        });
+
+        // 6. ローカル画像の即時プレビュー
+        function loadUserImage(event, slotIndex) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imgEl = document.getElementById('preview-img-' + slotIndex);
+                const txtEl = document.getElementById('placeholder-txt-' + slotIndex);
+                imgEl.src = e.target.result;
+                imgEl.classList.remove('hidden');
+                if (txtEl) txtEl.classList.add('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // 7. 背景カラーテーマ＆書体の着せ替え
+        function setTheme(themeName) {
+            currentTheme = themeName;
+            if (themeName === 'default') {
+                document.documentElement.removeAttribute('data-theme');
+            } else {
+                document.documentElement.setAttribute('data-theme', themeName);
+            }
+        }
+
+        function toggleFontStyle() {
+            isSerif = !isSerif;
+            document.body.classList.toggle('font-serif-mode', isSerif);
+            document.getElementById('font-toggle-btn').textContent = isSerif ? '書体：明朝体' : '書体：ゴシック';
+        }
+
+        // 8. 試着内容（追加・削除・並び替え後のセクション構成を含む）をメール引き継ぎ
+        function sendRoleplayOrder() {
+            const brandEl = document.getElementById('sim-brand-name');
+            const copyEl = document.getElementById('sim-main-copy');
+            const leadEl = document.getElementById('sim-lead-text');
+
+            const brand = brandEl ? brandEl.innerText.trim() : '未設定';
+            const mainCopy = copyEl ? copyEl.innerText.replace(/\n+/g, ' / ').trim() : '（Heroセクション削除済み）';
+            const lead = leadEl ? leadEl.innerText.trim() : '-';
+            const themeLabel = currentTheme === 'warm' ? '生成り（Warm）' : currentTheme === 'dark' ? '墨黒（Dark）' : '標準白（Standard）';
+            const fontLabel = isSerif ? '明朝体' : 'ゴシック体';
+            const popupLabel = isPopupEnabled ? 'あり（ON）' : 'なし（OFF）';
+
+            // 現在のセクション構成・順序を取得
+            const sectionOrder = Array.from(document.querySelectorAll('#sortable-container .sortable-section'))
+                .map((sec, idx) => {
+                    const heading = sec.querySelector('h1, h2');
+                    const headingTxt = heading ? `「${heading.innerText.replace(/\n+/g, ' ').trim()}」` : '';
+                    return `${idx + 1}. ${sec.getAttribute('data-section-name') || sec.id} ${headingTxt}`;
+                })
+                .join('\n');
+
+            const subject = encodeURIComponent(`【re-standard】試着シミュレーターからの制作相談（${brand}）`);
+            const body = encodeURIComponent(
+`re-standard 制作相談窓口 行
+
+ブラウザ上の試着シミュレーターにて、以下の構成を作成しました。
+このイメージをベースに制作の相談・見積もりを希望します。
+
+--------------------------------------------------
+■ 試着した屋号・タイトル：
+${brand}
+
+■ 試着したメインコピー：
+${mainCopy}
+
+■ 試着した導入文：
+${lead}
+
+■ 構築・並び替えたセクション構成：
+${sectionOrder}
+
+■ 選択したスタイル・機能設定：
+・背景トーン：${themeLabel}
+・見出し書体：${fontLabel}
+・画像拡大ポップアップ：${popupLabel}
+--------------------------------------------------
+
+【その他ご要望・ご質問】
+（こちらにご記入ください）
+`
+            );
+
+            window.location.href = `mailto:hello@example.com?subject=${subject}&body=${body}`;
+        }
+
+        // 9. セキュリティ・コピーガード（試着モードOFF時は右クリック完全ブロック）
+        document.addEventListener('contextmenu', function(e) {
+            if (!isSimMode) {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>
